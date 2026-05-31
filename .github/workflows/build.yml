@@ -1,0 +1,31 @@
+name: Build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    name: Build iOS App
+    runs-on: macos-14  # Apple Silicon, ships with Xcode 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 15
+        run: sudo xcode-select -switch /Applications/Xcode_15.4.app
+
+      - name: Show environment
+        run: xcodebuild -version && swift --version
+
+      - name: Build
+        run: |
+          xcodebuild build \
+            -project RecallThat.xcodeproj \
+            -scheme RecallThat \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO
