@@ -18,7 +18,6 @@
 		AA000009000000000000001A /* OCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000009000000000000001B /* OCRService.swift */; };
 		AA00000A000000000000001A /* SearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000A000000000000001B /* SearchService.swift */; };
 		AA00000B000000000000001A /* ThumbnailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000B000000000000001B /* ThumbnailService.swift */; };
-		AA00000C000000000000001A /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA00000C000000000000001B /* Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -237,7 +236,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AA00000C000000000000001A /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
