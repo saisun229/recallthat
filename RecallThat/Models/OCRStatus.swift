@@ -6,4 +6,13 @@ enum OCRStatus: String, Codable {
     case pending
     case complete
     case failed
+
+    var label: String {
+        switch self {
+        case .notStarted: return "Not indexed"
+        case .pending:    return "Processing"
+        case .complete:   return "Indexed"
+        case .failed:     return "Failed"
+        }
+    }
 }

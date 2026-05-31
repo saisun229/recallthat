@@ -18,6 +18,13 @@
 		AA000009000000000000001A /* OCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000009000000000000001B /* OCRService.swift */; };
 		AA00000A000000000000001A /* SearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000A000000000000001B /* SearchService.swift */; };
 		AA00000B000000000000001A /* ThumbnailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000B000000000000001B /* ThumbnailService.swift */; };
+		AA000010000000000000001A /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000010000000000000001B /* HomeView.swift */; };
+		AA000011000000000000001A /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000011000000000000001B /* SearchView.swift */; };
+		AA000012000000000000001A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000012000000000000001B /* SettingsView.swift */; };
+		AA000013000000000000001A /* MemoryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000013000000000000001B /* MemoryDetailView.swift */; };
+		AA000014000000000000001A /* MemoryCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000014000000000000001B /* MemoryCardView.swift */; };
+		AA000015000000000000001A /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000015000000000000001B /* HomeViewModel.swift */; };
+		AA000016000000000000001A /* SearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000016000000000000001B /* SearchViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,6 +41,13 @@
 		AA00000B000000000000001B /* ThumbnailService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailService.swift; sourceTree = "<group>"; };
 		AA00000C000000000000001B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AA0000FF000000000000001B /* RecallThat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RecallThat.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA000010000000000000001B /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		AA000011000000000000001B /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
+		AA000012000000000000001B /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		AA000013000000000000001B /* MemoryDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryDetailView.swift; sourceTree = "<group>"; };
+		AA000014000000000000001B /* MemoryCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryCardView.swift; sourceTree = "<group>"; };
+		AA000015000000000000001B /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
+		AA000016000000000000001B /* SearchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -92,6 +106,11 @@
 		AA0000D3000000000000001B /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				AA000010000000000000001B /* HomeView.swift */,
+				AA000011000000000000001B /* SearchView.swift */,
+				AA000012000000000000001B /* SettingsView.swift */,
+				AA000013000000000000001B /* MemoryDetailView.swift */,
+				AA000014000000000000001B /* MemoryCardView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -99,6 +118,8 @@
 		AA0000D4000000000000001B /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				AA000015000000000000001B /* HomeViewModel.swift */,
+				AA000016000000000000001B /* SearchViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -257,6 +278,13 @@
 				AA000009000000000000001A /* OCRService.swift in Sources */,
 				AA00000A000000000000001A /* SearchService.swift in Sources */,
 				AA00000B000000000000001A /* ThumbnailService.swift in Sources */,
+				AA000010000000000000001A /* HomeView.swift in Sources */,
+				AA000011000000000000001A /* SearchView.swift in Sources */,
+				AA000012000000000000001A /* SettingsView.swift in Sources */,
+				AA000013000000000000001A /* MemoryDetailView.swift in Sources */,
+				AA000014000000000000001A /* MemoryCardView.swift in Sources */,
+				AA000015000000000000001A /* HomeViewModel.swift in Sources */,
+				AA000016000000000000001A /* SearchViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
