@@ -8,8 +8,15 @@ final class HomeViewModel {
     var isLoading: Bool = false
     var isImporting: Bool = false
     var isRunningOCR: Bool = false
+    var ocrProgress: OCRProgress? = nil
     var errorMessage: String? = nil
     var permissionStatus: PHAuthorizationStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+
+    struct OCRProgress {
+        let completed: Int
+        let total: Int
+        var description: String { "Indexing \(completed) of \(total)…" }
+    }
 
     func load(from repository: any MemoryRepository) async {
         isLoading = true
@@ -43,13 +50,35 @@ final class HomeViewModel {
     }
 
     func runOCR(using pipeline: OCRPipelineService, repository: any MemoryRepository) async {
+        // Count pending items upfront so we can show progress
+        let pending = memories.filter { $0.ocrStatus == .notStarted && $0.photoAssetIdentifier != nil }
+        guard !pending.isEmpty else { return }
+
         isRunningOCR = true
+        ocrProgress = OCRProgress(completed: 0, total: pending.count)
+
         await pipeline.processQueue { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self else { return }
+                let done = (self.ocrProgress?.completed ?? 0) + 1
+                self.ocrProgress = OCRProgress(completed: done, total: pending.count)
                 self.memories = (try? await repository.fetchAll()) ?? self.memories
             }
         }
+
+        ocrProgress = nil
         isRunningOCR = false
+    }
+
+    func retryFailedOCR(using pipeline: OCRPipelineService, repository: any MemoryRepository) async {
+        // Re-queue failed items by resetting their status, then run the pipeline
+        let failed = memories.filter { $0.ocrStatus == .failed && $0.photoAssetIdentifier != nil }
+        guard !failed.isEmpty else { return }
+        for var memory in failed {
+            memory.ocrStatus = .notStarted
+            try? await repository.update(memory)
+        }
+        await load(from: repository)
+        await runOCR(using: pipeline, repository: repository)
     }
 }

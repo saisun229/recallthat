@@ -37,6 +37,7 @@
 		AA000026000000000000001A /* DefaultSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000026000000000000001B /* DefaultSearchService.swift */; };
 		AA000027000000000000001A /* MemoryDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000027000000000000001B /* MemoryDetailViewModel.swift */; };
 		AA000028000000000000001A /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000028000000000000001B /* OnboardingView.swift */; };
+		AA000029000000000000001A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000029000000000000001B /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -72,6 +73,7 @@
 		AA000026000000000000001B /* DefaultSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultSearchService.swift; sourceTree = "<group>"; };
 		AA000027000000000000001B /* MemoryDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryDetailViewModel.swift; sourceTree = "<group>"; };
 		AA000028000000000000001B /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		AA000029000000000000001B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -223,6 +225,7 @@
 			isa = PBXGroup;
 			children = (
 				AA00000C000000000000001B /* Info.plist */,
+				AA000029000000000000001B /* Assets.xcassets */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -293,6 +296,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AA000029000000000000001A /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -33,5 +33,9 @@ struct SearchView: View {
         .task {
             await viewModel.loadMemories(from: appEnv.memoryRepository)
         }
+        // Reload index each time the tab becomes visible so OCR results appear
+        .onAppear {
+            Task { await viewModel.loadMemories(from: appEnv.memoryRepository) }
+        }
     }
 }
