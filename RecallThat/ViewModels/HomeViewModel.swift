@@ -2,6 +2,7 @@ import Foundation
 import Observation
 import Photos
 
+@MainActor
 @Observable
 final class HomeViewModel {
     var memories: [Memory] = []
