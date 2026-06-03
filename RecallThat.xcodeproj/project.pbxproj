@@ -25,6 +25,9 @@
 		AA000014000000000000001A /* MemoryCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000014000000000000001B /* MemoryCardView.swift */; };
 		AA000015000000000000001A /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000015000000000000001B /* HomeViewModel.swift */; };
 		AA000016000000000000001A /* SearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000016000000000000001B /* SearchViewModel.swift */; };
+		AA000017000000000000001A /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000017000000000000001B /* AppEnvironment.swift */; };
+		AA000018000000000000001A /* AppRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000018000000000000001B /* AppRootView.swift */; };
+		AA000019000000000000001A /* SwiftDataMemoryRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000019000000000000001B /* SwiftDataMemoryRepository.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,6 +51,9 @@
 		AA000014000000000000001B /* MemoryCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryCardView.swift; sourceTree = "<group>"; };
 		AA000015000000000000001B /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
 		AA000016000000000000001B /* SearchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewModel.swift; sourceTree = "<group>"; };
+		AA000017000000000000001B /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
+		AA000018000000000000001B /* AppRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
+		AA000019000000000000001B /* SwiftDataMemoryRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataMemoryRepository.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,6 +95,8 @@
 			children = (
 				AA000001000000000000001B /* RecallThatApp.swift */,
 				AA000002000000000000001B /* ContentView.swift */,
+				AA000017000000000000001B /* AppEnvironment.swift */,
+				AA000018000000000000001B /* AppRootView.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -172,6 +180,7 @@
 			children = (
 				AA000006000000000000001B /* MemoryRepository.swift */,
 				AA000007000000000000001B /* MemoryItem.swift */,
+				AA000019000000000000001B /* SwiftDataMemoryRepository.swift */,
 			);
 			path = Persistence;
 			sourceTree = "<group>";
@@ -285,6 +294,9 @@
 				AA000014000000000000001A /* MemoryCardView.swift in Sources */,
 				AA000015000000000000001A /* HomeViewModel.swift in Sources */,
 				AA000016000000000000001A /* SearchViewModel.swift in Sources */,
+				AA000017000000000000001A /* AppEnvironment.swift in Sources */,
+				AA000018000000000000001A /* AppRootView.swift in Sources */,
+				AA000019000000000000001A /* SwiftDataMemoryRepository.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

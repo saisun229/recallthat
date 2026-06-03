@@ -5,7 +5,7 @@ import SwiftData
 struct RecallThatApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            AppRootView()
                 .modelContainer(for: MemoryItem.self)
         }
     }

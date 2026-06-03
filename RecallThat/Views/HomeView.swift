@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct HomeView: View {
+    @Environment(AppEnvironment.self) private var appEnv
     @State private var viewModel = HomeViewModel()
 
     var body: some View {
@@ -8,6 +9,12 @@ struct HomeView: View {
             Group {
                 if viewModel.isLoading {
                     ProgressView("Loading memories…")
+                } else if let error = viewModel.errorMessage {
+                    ContentUnavailableView(
+                        "Something went wrong",
+                        systemImage: "exclamationmark.triangle",
+                        description: Text(error)
+                    )
                 } else if viewModel.memories.isEmpty {
                     emptyState
                 } else {
@@ -15,6 +22,9 @@ struct HomeView: View {
                 }
             }
             .navigationTitle("RecallThat")
+        }
+        .task {
+            await viewModel.load(from: appEnv.memoryRepository)
         }
     }
 
