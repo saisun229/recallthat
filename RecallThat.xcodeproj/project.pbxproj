@@ -34,6 +34,7 @@
 		AA000023000000000000001A /* PhotoPermissionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000023000000000000001B /* PhotoPermissionView.swift */; };
 		AA000024000000000000001A /* DefaultOCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000024000000000000001B /* DefaultOCRService.swift */; };
 		AA000025000000000000001A /* OCRPipelineService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000025000000000000001B /* OCRPipelineService.swift */; };
+		AA000026000000000000001A /* DefaultSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000026000000000000001B /* DefaultSearchService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -66,6 +67,7 @@
 		AA000023000000000000001B /* PhotoPermissionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoPermissionView.swift; sourceTree = "<group>"; };
 		AA000024000000000000001B /* DefaultOCRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultOCRService.swift; sourceTree = "<group>"; };
 		AA000025000000000000001B /* OCRPipelineService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRPipelineService.swift; sourceTree = "<group>"; };
+		AA000026000000000000001B /* DefaultSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultSearchService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -181,6 +183,7 @@
 			isa = PBXGroup;
 			children = (
 				AA00000A000000000000001B /* SearchService.swift */,
+				AA000026000000000000001B /* DefaultSearchService.swift */,
 			);
 			path = Search;
 			sourceTree = "<group>";
@@ -321,6 +324,7 @@
 				AA000023000000000000001A /* PhotoPermissionView.swift in Sources */,
 				AA000024000000000000001A /* DefaultOCRService.swift in Sources */,
 				AA000025000000000000001A /* OCRPipelineService.swift in Sources */,
+				AA000026000000000000001A /* DefaultSearchService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

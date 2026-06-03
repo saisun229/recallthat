@@ -5,5 +5,13 @@ import Observation
 final class SearchViewModel {
     var query: String = ""
     var results: [Memory] = []
-    var isSearching: Bool = false
+    var allMemories: [Memory] = []
+
+    func loadMemories(from repository: any MemoryRepository) async {
+        allMemories = (try? await repository.fetchAll()) ?? []
+    }
+
+    func search(using service: any SearchServiceProtocol) {
+        results = service.search(query: query, in: allMemories)
+    }
 }

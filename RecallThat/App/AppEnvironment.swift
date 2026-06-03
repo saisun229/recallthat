@@ -9,16 +9,19 @@ final class AppEnvironment {
     let photoLibraryService: any PhotoLibraryServiceProtocol
     let photoImportService: PhotoImportService
     let ocrPipelineService: OCRPipelineService
+    let searchService: any SearchServiceProtocol
 
     init(
         repository: any MemoryRepository,
         photoLibraryService: any PhotoLibraryServiceProtocol,
         photoImportService: PhotoImportService,
-        ocrPipelineService: OCRPipelineService
+        ocrPipelineService: OCRPipelineService,
+        searchService: any SearchServiceProtocol
     ) {
         self.memoryRepository = repository
         self.photoLibraryService = photoLibraryService
         self.photoImportService = photoImportService
         self.ocrPipelineService = ocrPipelineService
+        self.searchService = searchService
     }
 }

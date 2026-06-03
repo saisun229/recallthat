@@ -22,11 +22,13 @@ struct AppRootView: View {
             let importService = PhotoImportService(photoLibrary: photoService, repository: repo)
             let ocrService = DefaultOCRService()
             let ocrPipeline = OCRPipelineService(ocrService: ocrService, repository: repo)
+            let searchService = DefaultSearchService()
             appEnvironment = AppEnvironment(
                 repository: repo,
                 photoLibraryService: photoService,
                 photoImportService: importService,
-                ocrPipelineService: ocrPipeline
+                ocrPipelineService: ocrPipeline,
+                searchService: searchService
             )
         }
     }
