@@ -7,6 +7,7 @@ final class HomeViewModel {
     var memories: [Memory] = []
     var isLoading: Bool = false
     var isImporting: Bool = false
+    var isRunningOCR: Bool = false
     var errorMessage: String? = nil
     var permissionStatus: PHAuthorizationStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
 
@@ -39,5 +40,16 @@ final class HomeViewModel {
             errorMessage = "Import failed. Please try again."
         }
         isImporting = false
+    }
+
+    func runOCR(using pipeline: OCRPipelineService, repository: any MemoryRepository) async {
+        isRunningOCR = true
+        await pipeline.processQueue { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.memories = (try? await repository.fetchAll()) ?? self.memories
+            }
+        }
+        isRunningOCR = false
     }
 }

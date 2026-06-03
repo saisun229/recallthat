@@ -20,10 +20,13 @@ struct AppRootView: View {
             try? repo.seedMockDataIfNeeded()
             let photoService = DefaultPhotoLibraryService()
             let importService = PhotoImportService(photoLibrary: photoService, repository: repo)
+            let ocrService = DefaultOCRService()
+            let ocrPipeline = OCRPipelineService(ocrService: ocrService, repository: repo)
             appEnvironment = AppEnvironment(
                 repository: repo,
                 photoLibraryService: photoService,
-                photoImportService: importService
+                photoImportService: importService,
+                ocrPipelineService: ocrPipeline
             )
         }
     }

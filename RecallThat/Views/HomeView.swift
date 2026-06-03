@@ -23,7 +23,7 @@ struct HomeView: View {
             }
             .navigationTitle("RecallThat")
             .toolbar {
-                if viewModel.isImporting {
+                if viewModel.isImporting || viewModel.isRunningOCR {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         ProgressView()
                     }
@@ -32,20 +32,15 @@ struct HomeView: View {
         }
         .task {
             await viewModel.load(from: appEnv.memoryRepository)
-            if viewModel.permissionStatus == .authorized || viewModel.permissionStatus == .limited {
-                await viewModel.importScreenshots(
-                    using: appEnv.photoImportService,
-                    repository: appEnv.memoryRepository
-                )
-            }
+            guard viewModel.permissionStatus == .authorized || viewModel.permissionStatus == .limited else { return }
+            await viewModel.importScreenshots(using: appEnv.photoImportService, repository: appEnv.memoryRepository)
+            await viewModel.runOCR(using: appEnv.ocrPipelineService, repository: appEnv.memoryRepository)
         }
         .onChange(of: viewModel.permissionStatus) { _, newStatus in
             guard newStatus == .authorized || newStatus == .limited else { return }
             Task {
-                await viewModel.importScreenshots(
-                    using: appEnv.photoImportService,
-                    repository: appEnv.memoryRepository
-                )
+                await viewModel.importScreenshots(using: appEnv.photoImportService, repository: appEnv.memoryRepository)
+                await viewModel.runOCR(using: appEnv.ocrPipelineService, repository: appEnv.memoryRepository)
             }
         }
     }
