@@ -5,17 +5,10 @@ struct MemoryCardView: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            if let identifier = memory.photoAssetIdentifier {
-                AssetThumbnailView(identifier: identifier, size: 56)
-            } else {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.secondary.opacity(0.15))
-                    .frame(width: 56, height: 56)
-                    .overlay(Image(systemName: "photo").foregroundStyle(.tertiary))
-            }
+            thumbnail
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(memory.title.isEmpty ? "Screenshot" : memory.title)
+            VStack(alignment: .leading, spacing: 5) {
+                Text(displayTitle)
                     .font(.headline)
                     .lineLimit(1)
 
@@ -26,24 +19,62 @@ struct MemoryCardView: View {
                         .lineLimit(2)
                 }
 
-                HStack {
+                HStack(spacing: 6) {
                     Text(memory.createdAt.formatted(date: .abbreviated, time: .omitted))
                         .font(.caption)
                         .foregroundStyle(.tertiary)
 
                     Spacer()
 
-                    Text(memory.ocrStatus.label)
-                        .font(.caption)
-                        .foregroundStyle(statusColor)
+                    if !memory.originalExists {
+                        Label("Original deleted", systemImage: "trash")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                            .labelStyle(.iconOnly)
+                    }
+
+                    OCRStatusBadge(status: memory.ocrStatus)
                 }
             }
         }
         .padding(.vertical, 4)
     }
 
-    private var statusColor: Color {
-        switch memory.ocrStatus {
+    @ViewBuilder
+    private var thumbnail: some View {
+        if let identifier = memory.photoAssetIdentifier {
+            AssetThumbnailView(identifier: identifier, size: 60)
+        } else {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.secondary.opacity(0.12))
+                .frame(width: 60, height: 60)
+                .overlay(Image(systemName: "photo").foregroundStyle(.tertiary))
+        }
+    }
+
+    private var displayTitle: String {
+        if !memory.title.isEmpty { return memory.title }
+        return "Screenshot — \(memory.createdAt.formatted(date: .abbreviated, time: .omitted))"
+    }
+}
+
+// MARK: - OCR Status Badge
+
+private struct OCRStatusBadge: View {
+    let status: OCRStatus
+
+    var body: some View {
+        Text(status.label)
+            .font(.caption2)
+            .fontWeight(.medium)
+            .foregroundStyle(color)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(color.opacity(0.12), in: Capsule())
+    }
+
+    private var color: Color {
+        switch status {
         case .notStarted: return .secondary
         case .pending:    return .orange
         case .complete:   return .green
