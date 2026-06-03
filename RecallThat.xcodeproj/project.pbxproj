@@ -35,6 +35,7 @@
 		AA000024000000000000001A /* DefaultOCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000024000000000000001B /* DefaultOCRService.swift */; };
 		AA000025000000000000001A /* OCRPipelineService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000025000000000000001B /* OCRPipelineService.swift */; };
 		AA000026000000000000001A /* DefaultSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000026000000000000001B /* DefaultSearchService.swift */; };
+		AA000027000000000000001A /* MemoryDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000027000000000000001B /* MemoryDetailViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -68,6 +69,7 @@
 		AA000024000000000000001B /* DefaultOCRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultOCRService.swift; sourceTree = "<group>"; };
 		AA000025000000000000001B /* OCRPipelineService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRPipelineService.swift; sourceTree = "<group>"; };
 		AA000026000000000000001B /* DefaultSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultSearchService.swift; sourceTree = "<group>"; };
+		AA000027000000000000001B /* MemoryDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryDetailViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -144,6 +146,7 @@
 			children = (
 				AA000015000000000000001B /* HomeViewModel.swift */,
 				AA000016000000000000001B /* SearchViewModel.swift */,
+				AA000027000000000000001B /* MemoryDetailViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -325,6 +328,7 @@
 				AA000024000000000000001A /* DefaultOCRService.swift in Sources */,
 				AA000025000000000000001A /* OCRPipelineService.swift in Sources */,
 				AA000026000000000000001A /* DefaultSearchService.swift in Sources */,
+				AA000027000000000000001A /* MemoryDetailViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
