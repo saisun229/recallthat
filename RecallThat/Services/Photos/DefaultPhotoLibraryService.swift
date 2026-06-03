@@ -14,11 +14,17 @@ final class DefaultPhotoLibraryService: PhotoLibraryServiceProtocol {
 
     func fetchScreenshotIdentifiers() async -> [String] {
         let options = PHFetchOptions()
+        options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+
+        #if targetEnvironment(simulator)
+        // Simulator: photos added via drag-and-drop don't carry the .photoScreenshot
+        // media subtype — import all images so the app is testable without a real device.
+        #else
         options.predicate = NSPredicate(
             format: "(mediaSubtype & %d) != 0",
             PHAssetMediaSubtype.photoScreenshot.rawValue
         )
-        options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        #endif
 
         var identifiers: [String] = []
         let result = PHAsset.fetchAssets(with: .image, options: options)
