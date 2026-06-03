@@ -28,6 +28,10 @@
 		AA000017000000000000001A /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000017000000000000001B /* AppEnvironment.swift */; };
 		AA000018000000000000001A /* AppRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000018000000000000001B /* AppRootView.swift */; };
 		AA000019000000000000001A /* SwiftDataMemoryRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000019000000000000001B /* SwiftDataMemoryRepository.swift */; };
+		AA000020000000000000001A /* DefaultPhotoLibraryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000020000000000000001B /* DefaultPhotoLibraryService.swift */; };
+		AA000021000000000000001A /* PhotoImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000021000000000000001B /* PhotoImportService.swift */; };
+		AA000022000000000000001A /* AssetThumbnailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000022000000000000001B /* AssetThumbnailView.swift */; };
+		AA000023000000000000001A /* PhotoPermissionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000023000000000000001B /* PhotoPermissionView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -54,6 +58,10 @@
 		AA000017000000000000001B /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		AA000018000000000000001B /* AppRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
 		AA000019000000000000001B /* SwiftDataMemoryRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataMemoryRepository.swift; sourceTree = "<group>"; };
+		AA000020000000000000001B /* DefaultPhotoLibraryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultPhotoLibraryService.swift; sourceTree = "<group>"; };
+		AA000021000000000000001B /* PhotoImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoImportService.swift; sourceTree = "<group>"; };
+		AA000022000000000000001B /* AssetThumbnailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssetThumbnailView.swift; sourceTree = "<group>"; };
+		AA000023000000000000001B /* PhotoPermissionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoPermissionView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -119,6 +127,8 @@
 				AA000012000000000000001B /* SettingsView.swift */,
 				AA000013000000000000001B /* MemoryDetailView.swift */,
 				AA000014000000000000001B /* MemoryCardView.swift */,
+				AA000022000000000000001B /* AssetThumbnailView.swift */,
+				AA000023000000000000001B /* PhotoPermissionView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -147,6 +157,8 @@
 			isa = PBXGroup;
 			children = (
 				AA000008000000000000001B /* PhotoLibraryService.swift */,
+				AA000020000000000000001B /* DefaultPhotoLibraryService.swift */,
+				AA000021000000000000001B /* PhotoImportService.swift */,
 			);
 			path = Photos;
 			sourceTree = "<group>";
@@ -297,6 +309,10 @@
 				AA000017000000000000001A /* AppEnvironment.swift in Sources */,
 				AA000018000000000000001A /* AppRootView.swift in Sources */,
 				AA000019000000000000001A /* SwiftDataMemoryRepository.swift in Sources */,
+				AA000020000000000000001A /* DefaultPhotoLibraryService.swift in Sources */,
+				AA000021000000000000001A /* PhotoImportService.swift in Sources */,
+				AA000022000000000000001A /* AssetThumbnailView.swift in Sources */,
+				AA000023000000000000001A /* PhotoPermissionView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

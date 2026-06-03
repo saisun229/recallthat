@@ -18,7 +18,13 @@ struct AppRootView: View {
             guard appEnvironment == nil else { return }
             let repo = SwiftDataMemoryRepository(context: modelContext)
             try? repo.seedMockDataIfNeeded()
-            appEnvironment = AppEnvironment(repository: repo)
+            let photoService = DefaultPhotoLibraryService()
+            let importService = PhotoImportService(photoLibrary: photoService, repository: repo)
+            appEnvironment = AppEnvironment(
+                repository: repo,
+                photoLibraryService: photoService,
+                photoImportService: importService
+            )
         }
     }
 }

@@ -14,4 +14,7 @@ protocol PhotoLibraryServiceProtocol {
     /// Fetch localIdentifiers for all screenshot assets in the library.
     /// Does not load image data — callers use identifiers with ThumbnailService or OCRService.
     func fetchScreenshotIdentifiers() async -> [String]
+
+    /// Delete the Photos asset with the given localIdentifier.
+    func deleteAsset(identifier: String) async throws
 }
