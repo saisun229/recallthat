@@ -36,6 +36,7 @@
 		AA000025000000000000001A /* OCRPipelineService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000025000000000000001B /* OCRPipelineService.swift */; };
 		AA000026000000000000001A /* DefaultSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000026000000000000001B /* DefaultSearchService.swift */; };
 		AA000027000000000000001A /* MemoryDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000027000000000000001B /* MemoryDetailViewModel.swift */; };
+		AA000028000000000000001A /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000028000000000000001B /* OnboardingView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -70,6 +71,7 @@
 		AA000025000000000000001B /* OCRPipelineService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRPipelineService.swift; sourceTree = "<group>"; };
 		AA000026000000000000001B /* DefaultSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultSearchService.swift; sourceTree = "<group>"; };
 		AA000027000000000000001B /* MemoryDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryDetailViewModel.swift; sourceTree = "<group>"; };
+		AA000028000000000000001B /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -137,6 +139,7 @@
 				AA000014000000000000001B /* MemoryCardView.swift */,
 				AA000022000000000000001B /* AssetThumbnailView.swift */,
 				AA000023000000000000001B /* PhotoPermissionView.swift */,
+				AA000028000000000000001B /* OnboardingView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -329,6 +332,7 @@
 				AA000025000000000000001A /* OCRPipelineService.swift in Sources */,
 				AA000026000000000000001A /* DefaultSearchService.swift in Sources */,
 				AA000027000000000000001A /* MemoryDetailViewModel.swift in Sources */,
+				AA000028000000000000001A /* OnboardingView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

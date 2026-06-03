@@ -1,17 +1,26 @@
 import SwiftUI
 import SwiftData
 
+private let onboardingKey = "hasCompletedOnboarding"
+
 /// Bootstraps the dependency graph once the SwiftData ModelContext is available,
-/// then hands off to ContentView with the environment wired up.
+/// shows onboarding on first launch, then hands off to ContentView.
 struct AppRootView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var appEnvironment: AppEnvironment?
+    @State private var showOnboarding: Bool = !UserDefaults.standard.bool(forKey: onboardingKey)
 
     var body: some View {
         ZStack {
             if let env = appEnvironment {
                 ContentView()
                     .environment(env)
+                    .fullScreenCover(isPresented: $showOnboarding) {
+                        OnboardingView {
+                            UserDefaults.standard.set(true, forKey: onboardingKey)
+                            showOnboarding = false
+                        }
+                    }
             }
         }
         .onAppear {
