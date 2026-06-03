@@ -67,44 +67,6 @@ final class SwiftDataMemoryRepository: MemoryRepository {
         try context.save()
     }
 
-    // Inserts a few realistic mock items on first launch (DEBUG builds only)
-    func seedMockDataIfNeeded() throws {
-        #if DEBUG
-        let count = try context.fetchCount(FetchDescriptor<MemoryItem>())
-        guard count == 0 else { return }
-
-        let mocks: [MemoryItem] = [
-            MemoryItem(
-                createdAt: Date().addingTimeInterval(-86_400 * 3),
-                importedAt: Date().addingTimeInterval(-86_400 * 3),
-                title: "WiFi password",
-                ocrText: "Network: HomeNetwork_5G\nPassword: correct-horse-battery",
-                ocrStatusRaw: OCRStatus.complete.rawValue,
-                searchText: "wifi password network homenetwork_5g correct-horse-battery",
-                originalExists: true
-            ),
-            MemoryItem(
-                createdAt: Date().addingTimeInterval(-86_400 * 7),
-                importedAt: Date().addingTimeInterval(-86_400 * 7),
-                title: "Flight confirmation",
-                ocrText: "Flight AA 1234\nDeparture: 09:45 AM\nGate: B22\nSeat: 14A",
-                ocrStatusRaw: OCRStatus.complete.rawValue,
-                searchText: "flight aa 1234 departure 09:45 gate b22 seat 14a confirmation",
-                originalExists: false,
-                deletedOriginalAt: Date().addingTimeInterval(-86_400 * 5)
-            ),
-            MemoryItem(
-                createdAt: Date().addingTimeInterval(-3_600),
-                importedAt: Date().addingTimeInterval(-3_600),
-                title: "New screenshot",
-                ocrText: "",
-                ocrStatusRaw: OCRStatus.notStarted.rawValue,
-                searchText: "",
-                originalExists: true
-            ),
-        ]
-        mocks.forEach { context.insert($0) }
-        try context.save()
-        #endif
-    }
+    // No-op: mock seed removed — real device testing uses actual Photos library
+    func seedMockDataIfNeeded() throws {}
 }

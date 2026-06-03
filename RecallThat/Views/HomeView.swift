@@ -64,7 +64,7 @@ struct HomeView: View {
         ContentUnavailableView(
             "No screenshots found",
             systemImage: "rectangle.stack",
-            description: Text("Screenshots from your Photos library will appear here once indexed.")
+            description: Text("Pull down to refresh, or check that RecallThat has Full Access in Settings → Privacy → Photos.")
         )
     }
 
