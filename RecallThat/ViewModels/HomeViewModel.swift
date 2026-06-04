@@ -82,4 +82,73 @@ final class HomeViewModel {
         await load(from: repository)
         await runOCR(using: pipeline, repository: repository)
     }
+
+    // MARK: - Selection
+
+    var isSelecting: Bool = false
+    var selectedIDs: Set<UUID> = []
+
+    func toggleSelecting() {
+        isSelecting.toggle()
+        if !isSelecting { selectedIDs.removeAll() }
+    }
+
+    func toggleSelection(_ id: UUID) {
+        if selectedIDs.contains(id) {
+            selectedIDs.remove(id)
+        } else {
+            selectedIDs.insert(id)
+        }
+    }
+
+    func selectAll() {
+        selectedIDs = Set(memories.map(\.id))
+    }
+
+    // MARK: - Delete
+
+    func safeDelete(
+        _ memory: Memory,
+        photoService: any PhotoLibraryServiceProtocol,
+        repository: any MemoryRepository
+    ) async {
+        guard let identifier = memory.photoAssetIdentifier, memory.originalExists else { return }
+        try? await photoService.deleteAsset(identifier: identifier)
+        var updated = memory
+        updated.originalExists = false
+        updated.deletedOriginalAt = Date()
+        try? await repository.update(updated)
+        if let index = memories.firstIndex(where: { $0.id == memory.id }) {
+            memories[index].originalExists = false
+            memories[index].deletedOriginalAt = Date()
+        }
+    }
+
+    func safeDeleteSelected(
+        photoService: any PhotoLibraryServiceProtocol,
+        repository: any MemoryRepository
+    ) async {
+        let targets = memories.filter { selectedIDs.contains($0.id) && $0.originalExists }
+        for memory in targets {
+            await safeDelete(memory, photoService: photoService, repository: repository)
+        }
+        selectedIDs.removeAll()
+        isSelecting = false
+    }
+
+    func hardDeleteSelected(
+        photoService: any PhotoLibraryServiceProtocol,
+        repository: any MemoryRepository
+    ) async {
+        let targets = memories.filter { selectedIDs.contains($0.id) }
+        for memory in targets {
+            if memory.originalExists, let identifier = memory.photoAssetIdentifier {
+                try? await photoService.deleteAsset(identifier: identifier)
+            }
+            try? await repository.delete(id: memory.id)
+        }
+        memories.removeAll { selectedIDs.contains($0.id) }
+        selectedIDs.removeAll()
+        isSelecting = false
+    }
 }

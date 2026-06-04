@@ -34,4 +34,7 @@ struct Memory: Identifiable, Equatable {
 
     /// Set when the user explicitly deletes the original via the Phase 7 flow
     var deletedOriginalAt: Date?
+
+    /// Original URL for sharedURL memories (nil for screenshot/sharedImage/sharedText)
+    var sourceURL: String?
 }

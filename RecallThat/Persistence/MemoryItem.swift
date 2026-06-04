@@ -18,6 +18,7 @@ final class MemoryItem {
     var searchText: String
     var originalExists: Bool
     var deletedOriginalAt: Date?
+    var sourceURL: String?
 
     init(
         id: UUID = UUID(),
@@ -31,7 +32,8 @@ final class MemoryItem {
         ocrStatusRaw: String = OCRStatus.notStarted.rawValue,
         searchText: String = "",
         originalExists: Bool = true,
-        deletedOriginalAt: Date? = nil
+        deletedOriginalAt: Date? = nil,
+        sourceURL: String? = nil
     ) {
         self.id = id
         self.sourceTypeRaw = sourceTypeRaw
@@ -45,6 +47,7 @@ final class MemoryItem {
         self.searchText = searchText
         self.originalExists = originalExists
         self.deletedOriginalAt = deletedOriginalAt
+        self.sourceURL = sourceURL
     }
 
     /// Convert to the domain model used by services and view models
@@ -61,7 +64,8 @@ final class MemoryItem {
             ocrStatus: OCRStatus(rawValue: ocrStatusRaw) ?? .notStarted,
             searchText: searchText,
             originalExists: originalExists,
-            deletedOriginalAt: deletedOriginalAt
+            deletedOriginalAt: deletedOriginalAt,
+            sourceURL: sourceURL
         )
     }
 }

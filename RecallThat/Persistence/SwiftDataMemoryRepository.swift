@@ -36,7 +36,8 @@ final class SwiftDataMemoryRepository: MemoryRepository {
             ocrStatusRaw: memory.ocrStatus.rawValue,
             searchText: memory.searchText,
             originalExists: memory.originalExists,
-            deletedOriginalAt: memory.deletedOriginalAt
+            deletedOriginalAt: memory.deletedOriginalAt,
+            sourceURL: memory.sourceURL
         )
         context.insert(item)
         try context.save()
@@ -55,6 +56,7 @@ final class SwiftDataMemoryRepository: MemoryRepository {
         item.originalExists = memory.originalExists
         item.deletedOriginalAt = memory.deletedOriginalAt
         item.localThumbnailPath = memory.localThumbnailPath
+        item.sourceURL = memory.sourceURL
         try context.save()
     }
 

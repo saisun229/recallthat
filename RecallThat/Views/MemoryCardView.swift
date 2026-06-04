@@ -1,10 +1,21 @@
 import SwiftUI
+import UIKit
 
 struct MemoryCardView: View {
     let memory: Memory
+    var isSelecting: Bool = false
+    var isSelected: Bool = false
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
+            if isSelecting {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.title2)
+                    .foregroundStyle(isSelected ? Color.accentColor : .secondary)
+                    .frame(width: 28, alignment: .center)
+                    .padding(.top, 10)
+            }
+
             thumbnail
 
             VStack(alignment: .leading, spacing: 5) {
@@ -26,7 +37,7 @@ struct MemoryCardView: View {
 
                     Spacer()
 
-                    if !memory.originalExists {
+                    if memory.sourceType == .screenshot && !memory.originalExists {
                         Label("Original deleted", systemImage: "trash")
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
@@ -44,11 +55,29 @@ struct MemoryCardView: View {
     private var thumbnail: some View {
         if let identifier = memory.photoAssetIdentifier {
             AssetThumbnailView(identifier: identifier, size: 60)
+        } else if let path = memory.localThumbnailPath,
+                  let uiImage = UIImage(contentsOfFile: path) {
+            Image(uiImage: uiImage)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: 60, height: 60)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
         } else {
             RoundedRectangle(cornerRadius: 8)
                 .fill(Color.secondary.opacity(0.12))
                 .frame(width: 60, height: 60)
-                .overlay(Image(systemName: "photo").foregroundStyle(.tertiary))
+                .overlay(
+                    Image(systemName: placeholderIcon)
+                        .foregroundStyle(.tertiary)
+                )
+        }
+    }
+
+    private var placeholderIcon: String {
+        switch memory.sourceType {
+        case .screenshot, .sharedImage: return "photo"
+        case .sharedURL:                return "link"
+        case .sharedText:               return "text.quote"
         }
     }
 
