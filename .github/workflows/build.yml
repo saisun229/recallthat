@@ -32,7 +32,9 @@ jobs:
             > /tmp/xcode_build.log 2>&1; \
           BUILD_EXIT=$?; \
           echo ""; \
-          echo "=== Swift errors ==="; \
-          grep -E "\.swift:[0-9]+:[0-9]+: error:" /tmp/xcode_build.log | sort -u | head -60 || echo "(no error lines matched)"; \
-          echo "=== End errors ==="; \
+          echo "=== All errors and warnings ==="; \
+          grep -i "error:" /tmp/xcode_build.log | head -80 || echo "(none)"; \
+          echo ""; \
+          echo "=== Last 60 lines ==="; \
+          tail -60 /tmp/xcode_build.log; \
           exit $BUILD_EXIT
