@@ -10,6 +10,12 @@
             <dict>
                 <key>NSExtensionActivationSupportsImageWithMaxCount</key>
                 <integer>10</integer>
+                <key>NSExtensionActivationSupportsMovieWithMaxCount</key>
+                <integer>5</integer>
+                <key>NSExtensionActivationSupportsAudioWithMaxCount</key>
+                <integer>5</integer>
+                <key>NSExtensionActivationSupportsFileWithMaxCount</key>
+                <integer>10</integer>
                 <key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
                 <integer>1</integer>
                 <key>NSExtensionActivationSupportsText</key>

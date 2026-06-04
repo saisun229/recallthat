@@ -7,4 +7,7 @@ enum MemorySourceType: String, Codable, CaseIterable {
     case sharedText    // Phase 10+
     case sharedURL     // Phase 10+
     case sharedImage   // Phase 10+
+    case sharedPDF     = "sharedPDF"
+    case sharedVideo   = "sharedVideo"
+    case sharedAudio   = "sharedAudio"
 }

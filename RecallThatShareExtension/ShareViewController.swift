@@ -3,6 +3,8 @@ import SwiftUI
 import SwiftData
 import Vision
 import UniformTypeIdentifiers
+import AVFoundation
+import PDFKit
 
 // MARK: - Observable state shared between UIKit controller and SwiftUI view
 
@@ -53,6 +55,15 @@ final class ShareViewController: UIViewController {
             for attachment in item.attachments ?? [] {
                 if attachment.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
                     await handleImage(attachment); return
+                }
+                if attachment.hasItemConformingToTypeIdentifier(UTType.pdf.identifier) {
+                    await handleFile(attachment, sourceType: .sharedPDF, label: "PDF"); return
+                }
+                if attachment.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
+                    await handleFile(attachment, sourceType: .sharedVideo, label: "Video"); return
+                }
+                if attachment.hasItemConformingToTypeIdentifier(UTType.audio.identifier) {
+                    await handleFile(attachment, sourceType: .sharedAudio, label: "Audio"); return
                 }
                 if attachment.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
                     await handleURL(attachment); return
@@ -147,6 +158,51 @@ final class ShareViewController: UIViewController {
                 ocrText: text,
                 thumbnailPath: nil,
                 sourceURL: nil
+            ))
+            succeed()
+        } catch {
+            fail()
+        }
+    }
+
+    // MARK: - File handler (PDF, video, audio, generic)
+
+    private func handleFile(_ provider: NSItemProvider, sourceType: MemorySourceType, label: String) async {
+        let typeID: String = {
+            switch sourceType {
+            case .sharedPDF:   return UTType.pdf.identifier
+            case .sharedVideo: return UTType.movie.identifier
+            case .sharedAudio: return UTType.audio.identifier
+            default:           return UTType.data.identifier
+            }
+        }()
+
+        do {
+            let raw = try await provider.loadItem(forTypeIdentifier: typeID)
+            let fileURL: URL? = raw as? URL
+            let filename = fileURL?.deletingPathExtension().lastPathComponent
+            let title = filename?.isEmpty == false ? filename! : "Shared \(label)"
+            let id = UUID()
+            var ocrText = ""
+            var thumbPath: String? = nil
+
+            if sourceType == .sharedPDF, let url = fileURL,
+               let doc = PDFDocument(url: url),
+               let firstPage = doc.page(at: 0) {
+                let pageImage = firstPage.thumbnail(of: CGSize(width: 400, height: 600), for: .mediaBox)
+                ocrText = (try? await recognizeText(in: pageImage)) ?? ""
+                thumbPath = saveThumbnail(pageImage, id: id)
+            } else if sourceType == .sharedVideo, let url = fileURL {
+                thumbPath = await videoThumbnail(from: url, id: id)
+            }
+
+            try save(MemoryPayload(
+                id: id,
+                sourceType: sourceType,
+                title: title,
+                ocrText: ocrText,
+                thumbnailPath: thumbPath,
+                sourceURL: fileURL?.absoluteString
             ))
             succeed()
         } catch {
@@ -266,6 +322,15 @@ final class ShareViewController: UIViewController {
         guard let (data, _) = try? await URLSession.shared.data(from: url),
               let image = UIImage(data: data) else { return nil }
         return saveThumbnail(image, id: id)
+    }
+
+    private func videoThumbnail(from url: URL, id: UUID) async -> String? {
+        let asset = AVURLAsset(url: url)
+        let gen = AVAssetImageGenerator(asset: asset)
+        gen.appliesPreferredTrackTransform = true
+        gen.maximumSize = CGSize(width: 400, height: 400)
+        guard let cgImage = try? await gen.image(at: .zero).image else { return nil }
+        return saveThumbnail(UIImage(cgImage: cgImage), id: id)
     }
 
     private func resized(_ image: UIImage, maxDimension: CGFloat) -> UIImage {
