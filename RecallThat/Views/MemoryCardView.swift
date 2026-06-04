@@ -78,6 +78,9 @@ struct MemoryCardView: View {
         case .screenshot, .sharedImage: return "photo"
         case .sharedURL:                return "link"
         case .sharedText:               return "text.quote"
+        case .sharedPDF:                return "doc.richtext"
+        case .sharedVideo:              return "video"
+        case .sharedAudio:              return "waveform"
         }
     }
 
