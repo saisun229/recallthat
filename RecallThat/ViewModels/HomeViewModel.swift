@@ -51,22 +51,22 @@ final class HomeViewModel {
     }
 
     func runOCR(using pipeline: OCRPipelineService, repository: any MemoryRepository) async {
-        // Count pending items upfront so we can show progress
         let pending = memories.filter { $0.ocrStatus == .notStarted && $0.photoAssetIdentifier != nil }
         guard !pending.isEmpty else { return }
 
         isRunningOCR = true
+        var completed = 0
         ocrProgress = OCRProgress(completed: 0, total: pending.count)
 
+        // processQueue is @MainActor so the callback runs on the main actor —
+        // safe to mutate @MainActor ViewModel properties directly, no Task needed.
         await pipeline.processQueue { [weak self] _ in
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-                let done = (self.ocrProgress?.completed ?? 0) + 1
-                self.ocrProgress = OCRProgress(completed: done, total: pending.count)
-                self.memories = (try? await repository.fetchAll()) ?? self.memories
-            }
+            completed += 1
+            self?.ocrProgress = OCRProgress(completed: completed, total: pending.count)
         }
 
+        // Reload the full list once all OCR is done
+        memories = (try? await repository.fetchAll()) ?? memories
         ocrProgress = nil
         isRunningOCR = false
     }
