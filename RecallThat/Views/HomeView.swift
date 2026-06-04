@@ -1,5 +1,5 @@
 import SwiftUI
-import Photos
+@preconcurrency import Photos
 
 struct HomeView: View {
     @Environment(AppEnvironment.self) private var appEnv

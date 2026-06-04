@@ -1,5 +1,5 @@
 import Foundation
-import Photos
+@preconcurrency import Photos
 
 /// Finds new screenshots in the Photos library and saves them as Memory records.
 /// Handles deduplication — already-imported asset identifiers are skipped.

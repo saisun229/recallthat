@@ -1,5 +1,5 @@
 import SwiftUI
-import Photos
+@preconcurrency import Photos
 
 struct PhotoPermissionView: View {
     let status: PHAuthorizationStatus

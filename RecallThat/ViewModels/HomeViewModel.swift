@@ -1,6 +1,6 @@
 import Foundation
 import Observation
-import Photos
+@preconcurrency import Photos
 
 @MainActor
 @Observable

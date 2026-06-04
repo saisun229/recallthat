@@ -1,5 +1,5 @@
 import Foundation
-import Photos
+@preconcurrency import Photos
 
 @MainActor
 final class DefaultPhotoLibraryService: PhotoLibraryServiceProtocol {

@@ -1,5 +1,5 @@
 import SwiftUI
-import Photos
+@preconcurrency import Photos
 
 /// Loads and displays a small thumbnail for a Photos asset identifier.
 /// Shows a placeholder while loading or if the asset is unavailable.

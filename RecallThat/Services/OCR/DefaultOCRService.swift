@@ -1,6 +1,6 @@
 import Foundation
-import Vision
-import Photos
+@preconcurrency import Vision
+@preconcurrency import Photos
 import UIKit
 
 enum OCRError: Error, LocalizedError {
