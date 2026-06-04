@@ -12,6 +12,7 @@
 		BB000003000000000000001A /* MemoryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000007000000000000001B /* MemoryItem.swift */; };
 		BB000004000000000000001A /* OCRStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000005000000000000001B /* OCRStatus.swift */; };
 		BB000005000000000000001A /* RecallThatShareExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = BB000013000000000000001B /* RecallThatShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		BB000006000000000000001A /* Memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000003000000000000001B /* Memory.swift */; };
 		AA000001000000000000001A /* RecallThatApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000001000000000000001B /* RecallThatApp.swift */; };
 		AA000002000000000000001A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000002000000000000001B /* ContentView.swift */; };
 		AA000003000000000000001A /* Memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000003000000000000001B /* Memory.swift */; };
@@ -401,6 +402,7 @@
 				BB000002000000000000001A /* MemorySourceType.swift in Sources */,
 				BB000003000000000000001A /* MemoryItem.swift in Sources */,
 				BB000004000000000000001A /* OCRStatus.swift in Sources */,
+				BB000006000000000000001A /* Memory.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
