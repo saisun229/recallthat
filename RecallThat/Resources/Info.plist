@@ -28,6 +28,8 @@
     </array>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>RecallThat needs access to your photos to find and index your screenshots. Everything stays on your device — nothing is uploaded.</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>RecallThat needs photo library access to delete original screenshots after they have been indexed.</string>
     <key>UILaunchScreen</key>
     <dict/>
 </dict>

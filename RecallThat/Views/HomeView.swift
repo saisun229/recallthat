@@ -31,6 +31,9 @@ struct HomeView: View {
             guard newStatus == .authorized || newStatus == .limited else { return }
             Task { await runFullSync() }
         }
+        .onChange(of: appEnv.memoriesVersion) { _, _ in
+            Task { await runFullSync() }
+        }
         .refreshable {
             await runFullSync()
         }

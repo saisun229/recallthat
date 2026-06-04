@@ -41,6 +41,9 @@ final class DefaultOCRService: OCRServiceProtocol {
                 contentMode: .default,
                 options: options
             ) { image, info in
+                // Skip degraded (low-quality) intermediate deliveries
+                let isDegraded = info?[PHImageResultIsDegradedKey] as? Bool ?? false
+                if isDegraded { return }
                 if let error = info?[PHImageErrorKey] as? Error {
                     continuation.resume(throwing: error)
                 } else if let image {

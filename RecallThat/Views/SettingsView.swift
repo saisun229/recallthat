@@ -74,6 +74,7 @@ struct SettingsView: View {
         for memory in all {
             try? await appEnv.memoryRepository.delete(id: memory.id)
         }
+        appEnv.memoriesVersion += 1
         showDeletedAllAlert = true
     }
 }
