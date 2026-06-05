@@ -8,7 +8,10 @@ Work through each section in order. Each step must be done before the next.
 
 1. Go to https://developer.apple.com/programs/enroll/
 2. Enroll in the **Apple Developer Program** ($99/year).
-3. Wait for approval (usually < 48 hours).
+   - When asked entity type: choose **Individual** (not Organization).
+   - Individual enrollment does not require a D-U-N-S number.
+   - Your legal name will appear as the seller name on the App Store (e.g. "Sai Krishna Reddy Mudhiganti"). You can set a display name like "RecallThat" as a separate "doing business as" field in App Store Connect later.
+3. Approval is usually instant or within a few hours for individuals.
 
 ---
 
