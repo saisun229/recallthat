@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RecallThat — Privacy Policy</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #1c1c1e;
+      --muted: #6e6e73;
+      --accent: #0a84ff;
+      --border: #e5e5ea;
+      font-size: 16px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1c1c1e;
+        --text: #f2f2f7;
+        --muted: #98989d;
+        --accent: #0a84ff;
+        --border: #3a3a3c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 2.5rem; }
+    header h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; }
+    header p { color: var(--muted); font-size: 0.9rem; }
+    h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+    p { margin-top: 0.75rem; }
+    ul { margin-top: 0.75rem; padding-left: 1.4rem; }
+    li { margin-bottom: 0.35rem; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .callout {
+      background: rgba(10,132,255,0.08);
+      border-left: 3px solid var(--accent);
+      border-radius: 4px;
+      padding: 0.75rem 1rem;
+      margin-top: 1rem;
+      font-size: 0.95rem;
+    }
+    footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>RecallThat — Privacy Policy</h1>
+      <p>Effective date: June 5, 2026 &nbsp;·&nbsp; Last updated: June 5, 2026</p>
+    </header>
+
+    <div class="callout">
+      <strong>Short version:</strong> RecallThat stores everything on your device. Nothing you index — no screenshots, no extracted text, no thumbnails — is ever uploaded to any server or shared with any third party.
+    </div>
+
+    <h2>1. What RecallThat Does</h2>
+    <p>RecallThat is a personal memory tool. You grant access to your Photos library, and the app reads screenshot images to extract their text using Apple's on-device Vision framework. The extracted text, a title, and a small thumbnail are stored locally in an encrypted SwiftData database on your device.</p>
+
+    <h2>2. Data We Collect</h2>
+    <p>RecallThat collects <strong>no data</strong> from you. All processing and storage is local to your device:</p>
+    <ul>
+      <li><strong>OCR text</strong> — extracted from your screenshots using Apple Vision, stored locally only.</li>
+      <li><strong>Titles and timestamps</strong> — derived from screenshot content or metadata, stored locally only.</li>
+      <li><strong>Thumbnails</strong> — small image previews generated on-device, stored locally only.</li>
+      <li><strong>Onboarding flag</strong> — a single boolean in device storage to track whether you have completed onboarding.</li>
+    </ul>
+    <p>None of this data ever leaves your device.</p>
+
+    <h2>3. Photos Library Access</h2>
+    <p>RecallThat requests access to your Photos library solely to read screenshots you choose to index. It does not upload, sync, or share any photos or their contents. You may grant "Selected Photos" access and choose exactly which images the app can see.</p>
+    <p>You can revoke this permission at any time in <strong>Settings → Privacy &amp; Security → Photos</strong>.</p>
+
+    <h2>4. Share Extension</h2>
+    <p>RecallThat includes an optional Share Extension that lets you save content from other apps. When you share a webpage URL, the extension fetches publicly available metadata (title, description, preview image) from that URL to populate your memory entry. This network request is initiated by you explicitly and the result is stored on your device only.</p>
+    <p>The extension does not track, log, or transmit your browsing activity.</p>
+
+    <h2>5. No Analytics, No Crash Reporting</h2>
+    <p>RecallThat contains no analytics SDKs, no crash-reporting tools, and no advertising libraries. Your usage patterns are not observed.</p>
+
+    <h2>6. No Accounts or Cloud Sync</h2>
+    <p>RecallThat has no account system and no cloud backend. There is nothing to sign up for. Your data exists only on your device and is removed when you delete the app or use the "Delete All Memories" function inside the app.</p>
+
+    <h2>7. Data Security</h2>
+    <p>All data is stored in the default iOS app container, which is protected by iOS file encryption when your device is locked. RecallThat does not implement any custom encryption beyond what iOS provides by default.</p>
+
+    <h2>8. Children's Privacy</h2>
+    <p>RecallThat does not knowingly collect personal information from anyone. Because the app collects no data at all, it is safe for users of all ages. The app is rated 4+ on the App Store.</p>
+
+    <h2>9. Changes to This Policy</h2>
+    <p>If we change this privacy policy in a material way, we will update the effective date above and release a new app version. Continued use of the app after any changes means you accept the updated policy.</p>
+
+    <h2>10. Contact</h2>
+    <p>Questions or concerns? Email us at <a href="mailto:saimudhiganti@gmail.com">saimudhiganti@gmail.com</a>.</p>
+
+    <footer>
+      <p>RecallThat is developed by Sai Krishna Reddy Mudhiganti. This policy applies to the RecallThat iOS application.</p>
+    </footer>
+  </div>
+</body>
+</html>

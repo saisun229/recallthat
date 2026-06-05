@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>NSPrivacyTracking</key>
+    <false/>
+
+    <key>NSPrivacyTrackingDomains</key>
+    <array/>
+
+    <!-- The Share Extension stores data on-device only (shared App Group container).
+         When a URL is shared, the extension fetches Open Graph metadata from that URL
+         to populate the title/thumbnail. This network request is user-initiated and
+         the result is stored locally only — not transmitted elsewhere. -->
+    <key>NSPrivacyCollectedDataTypes</key>
+    <array/>
+
+    <!-- The Share Extension does not call any Required Reason APIs.
+         It does not read/write NSUserDefaults; it writes to SwiftData directly. -->
+    <key>NSPrivacyAccessedAPITypes</key>
+    <array/>
+</dict>
+</plist>
