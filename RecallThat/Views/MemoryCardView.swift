@@ -49,6 +49,7 @@ struct MemoryCardView: View {
                     }
 
                     OCRStatusDot(status: memory.ocrStatus)
+                        .padding(.trailing, 2)
                 }
             }
             .padding(.vertical, 2)

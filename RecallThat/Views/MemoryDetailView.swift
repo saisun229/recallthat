@@ -3,6 +3,7 @@ import SwiftUI
 struct MemoryDetailView: View {
     let memory: Memory
     @State private var viewModel: MemoryDetailViewModel
+    @State private var isTextExpanded = true
     @Environment(AppEnvironment.self) private var appEnv
 
     init(memory: Memory) {
@@ -63,72 +64,77 @@ struct MemoryDetailView: View {
     // MARK: - Info section
 
     private var infoSection: some View {
-        Section {
-            // Captured date
-            LabeledContent {
-                Text(viewModel.memory.createdAt.formatted(date: .abbreviated, time: .shortened))
-                    .foregroundStyle(.primary)
-            } label: {
+        Section("Details") {
+            // Captured
+            HStack(alignment: .center) {
                 Label("Captured", systemImage: "camera")
                     .foregroundStyle(.secondary)
+                Spacer()
+                Text(viewModel.memory.createdAt.formatted(date: .abbreviated, time: .shortened))
+                    .foregroundStyle(.primary)
+                    .multilineTextAlignment(.trailing)
             }
 
-            // Indexed date with green dot indicator
-            LabeledContent {
-                HStack(spacing: 6) {
-                    Circle()
-                        .fill(indexedDotColor)
-                        .frame(width: 8, height: 8)
-                    Text(viewModel.memory.importedAt.formatted(date: .abbreviated, time: .omitted))
-                        .foregroundStyle(.primary)
-                }
-            } label: {
-                Label("Indexed", systemImage: "sparkles")
+            // Indexed — green dot sits on the label side for clear alignment
+            HStack(alignment: .center, spacing: 6) {
+                Image(systemName: "sparkles")
                     .foregroundStyle(.secondary)
+                    .frame(width: 20, alignment: .center)
+                Circle()
+                    .fill(indexedDotColor)
+                    .frame(width: 8, height: 8)
+                Text("Indexed")
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text(viewModel.memory.importedAt.formatted(date: .abbreviated, time: .omitted))
+                    .foregroundStyle(.primary)
             }
 
             // Text extraction status
-            LabeledContent {
+            HStack(alignment: .center) {
+                Label("Text", systemImage: "text.page")
+                    .foregroundStyle(.secondary)
+                Spacer()
                 Text(viewModel.memory.ocrStatus.label)
                     .foregroundStyle(ocrStatusColor)
                     .fontWeight(.medium)
-            } label: {
-                Label("Text", systemImage: "text.page")
-                    .foregroundStyle(.secondary)
             }
 
-            // Original photo status
-            LabeledContent {
+            // Original photo
+            HStack(alignment: .center) {
+                Label("Original", systemImage: "photo")
+                    .foregroundStyle(.secondary)
+                Spacer()
                 if viewModel.memory.originalExists {
                     Label("In Photos", systemImage: "checkmark.circle.fill")
                         .foregroundStyle(.green)
-                        .labelStyle(.titleAndIcon)
                 } else {
                     Label("Deleted", systemImage: "photo.badge.xmark")
                         .foregroundStyle(.secondary)
-                        .labelStyle(.titleAndIcon)
                 }
-            } label: {
-                Label("Original", systemImage: "photo")
-                    .foregroundStyle(.secondary)
             }
-        } header: {
-            Text("Details")
         }
     }
 
-    // MARK: - OCR text section
+    // MARK: - OCR text section — collapsible
 
     private var ocrTextSection: some View {
-        Section("Extracted Text") {
-            if viewModel.memory.ocrText.isEmpty {
-                Text(placeholderText)
-                    .foregroundStyle(.secondary)
-                    .font(.subheadline)
-            } else {
-                Text(viewModel.memory.ocrText)
-                    .font(.body)
-                    .textSelection(.enabled)
+        Section {
+            DisclosureGroup(isExpanded: $isTextExpanded) {
+                if viewModel.memory.ocrText.isEmpty {
+                    Text(placeholderText)
+                        .foregroundStyle(.secondary)
+                        .font(.subheadline)
+                        .padding(.top, 4)
+                } else {
+                    Text(viewModel.memory.ocrText)
+                        .font(.body)
+                        .textSelection(.enabled)
+                        .padding(.top, 4)
+                }
+            } label: {
+                Label("Extracted Text", systemImage: "text.page.fill")
+                    .fontWeight(.medium)
             }
         }
     }
