@@ -273,6 +273,20 @@ struct HomeView: View {
             }
         }
 
+        // Logo + app name as the centre title
+        ToolbarItem(placement: .principal) {
+            HStack(spacing: 8) {
+                Image("AppLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 28, height: 28)
+                    .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                Text("RecallThat")
+                    .font(.headline)
+                    .fontWeight(.bold)
+            }
+        }
+
         ToolbarItem(placement: .navigationBarTrailing) {
             if viewModel.isSelecting {
                 Button("Select All") {
