@@ -42,8 +42,8 @@ struct HomeView: View {
         .refreshable {
             await runFullSync()
         }
-        // Safe Delete confirmation — removes photo from Photos, keeps text
-        .alert("Delete Original Photo?", isPresented: .init(
+        // Safe Delete (single) — removes photo from Photos, text stays
+        .alert("Safe Delete?", isPresented: .init(
             get: { safeDeleteTarget != nil },
             set: { if !$0 { safeDeleteTarget = nil } }
         )) {
@@ -60,10 +60,10 @@ struct HomeView: View {
             }
             Button("Cancel", role: .cancel) { safeDeleteTarget = nil }
         } message: {
-            Text("The original photo is removed from your Photos library. The extracted text stays in RecallThat — you can still search for this memory.")
+            Text("The photo is removed from your Photos library. The extracted text stays in RecallThat — you can still search for this memory.")
         }
-        // Hard Delete confirmation — removes everything permanently
-        .alert("Delete Memory Forever?", isPresented: .init(
+        // Full Delete (single) — removes everything permanently
+        .alert("Full Delete?", isPresented: .init(
             get: { hardDeleteTarget != nil },
             set: { if !$0 { hardDeleteTarget = nil } }
         )) {
@@ -82,11 +82,10 @@ struct HomeView: View {
         } message: {
             Text("Removes the memory and its original photo from RecallThat completely. This cannot be undone.")
         }
-        // Batch safe delete
-        .confirmationDialog(
-            "Delete Photos for \(viewModel.selectedIDs.count) Screenshot\(viewModel.selectedIDs.count == 1 ? "" : "s")?",
-            isPresented: $showBatchSafeDeleteConfirm,
-            titleVisibility: .visible
+        // Batch safe delete — centered alert, single Photos permission prompt
+        .alert(
+            "Safe Delete \(viewModel.selectedIDs.count) Screenshot\(viewModel.selectedIDs.count == 1 ? "" : "s")?",
+            isPresented: $showBatchSafeDeleteConfirm
         ) {
             Button("Delete from Photos", role: .destructive) {
                 Task {
@@ -98,13 +97,12 @@ struct HomeView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Original photos are removed from your Photos library. Extracted text stays searchable in RecallThat.")
+            Text("Photos are removed from your library in one step. Extracted text stays searchable in RecallThat.")
         }
-        // Batch hard delete
-        .confirmationDialog(
-            "Delete \(viewModel.selectedIDs.count) Memor\(viewModel.selectedIDs.count == 1 ? "y" : "ies") Forever?",
-            isPresented: $showBatchHardDeleteConfirm,
-            titleVisibility: .visible
+        // Batch full delete — centered alert
+        .alert(
+            "Full Delete \(viewModel.selectedIDs.count) Memor\(viewModel.selectedIDs.count == 1 ? "y" : "ies")?",
+            isPresented: $showBatchHardDeleteConfirm
         ) {
             Button("Delete Forever", role: .destructive) {
                 Task {
@@ -157,20 +155,20 @@ struct HomeView: View {
                         MemoryCardView(memory: memory)
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        // Orange: safe delete — photo gone, text stays
+                        // Green: safe delete — text stays, only photo removed
                         if memory.originalExists && memory.sourceType == .screenshot {
                             Button {
                                 safeDeleteTarget = memory
                             } label: {
-                                Label("Delete\nPhoto", systemImage: "photo.badge.minus")
+                                Label("Safe\nDelete", systemImage: "trash")
                             }
-                            .tint(.orange)
+                            .tint(.green)
                         }
-                        // Red: hard delete — removes everything permanently
+                        // Red: full delete — removes everything permanently
                         Button(role: .destructive) {
                             hardDeleteTarget = memory
                         } label: {
-                            Label("Delete\nForever", systemImage: "trash.fill")
+                            Label("Full\nDelete", systemImage: "trash.fill")
                         }
                     }
                 }
@@ -197,11 +195,11 @@ struct HomeView: View {
                 Button {
                     showBatchSafeDeleteConfirm = true
                 } label: {
-                    Label("Delete Photos", systemImage: "photo.badge.minus")
+                    Label("Safe Delete", systemImage: "trash")
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                 }
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.green)
 
                 Divider().frame(height: 22)
             }
@@ -209,7 +207,7 @@ struct HomeView: View {
             Button {
                 showBatchHardDeleteConfirm = true
             } label: {
-                Label("Delete Forever", systemImage: "trash")
+                Label("Full Delete", systemImage: "trash.fill")
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
             }

@@ -35,10 +35,16 @@ final class DefaultPhotoLibraryService: PhotoLibraryServiceProtocol {
     }
 
     func deleteAsset(identifier: String) async throws {
-        let assets = PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil)
-        guard let asset = assets.firstObject else { return }
+        try await deleteAssets(identifiers: [identifier])
+    }
+
+    func deleteAssets(identifiers: [String]) async throws {
+        guard !identifiers.isEmpty else { return }
+        let assets = PHAsset.fetchAssets(withLocalIdentifiers: identifiers, options: nil)
+        guard assets.count > 0 else { return }
+        // Single performChanges call = single system permission prompt regardless of count
         try await PHPhotoLibrary.shared().performChanges {
-            PHAssetChangeRequest.deleteAssets([asset] as NSArray)
+            PHAssetChangeRequest.deleteAssets(assets)
         }
     }
 }

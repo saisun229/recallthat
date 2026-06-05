@@ -129,8 +129,21 @@ final class HomeViewModel {
         repository: any MemoryRepository
     ) async {
         let targets = memories.filter { selectedIDs.contains($0.id) && $0.originalExists }
+        let identifiers = targets.compactMap(\.photoAssetIdentifier)
+
+        // Delete all originals in one Photos request — single permission prompt
+        try? await photoService.deleteAssets(identifiers: identifiers)
+
+        let now = Date()
         for memory in targets {
-            await safeDelete(memory, photoService: photoService, repository: repository)
+            var updated = memory
+            updated.originalExists = false
+            updated.deletedOriginalAt = now
+            try? await repository.update(updated)
+            if let i = memories.firstIndex(where: { $0.id == memory.id }) {
+                memories[i].originalExists = false
+                memories[i].deletedOriginalAt = now
+            }
         }
         selectedIDs.removeAll()
         isSelecting = false

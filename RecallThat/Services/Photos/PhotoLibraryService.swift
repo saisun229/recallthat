@@ -17,4 +17,7 @@ protocol PhotoLibraryServiceProtocol {
 
     /// Delete the Photos asset with the given localIdentifier.
     func deleteAsset(identifier: String) async throws
+
+    /// Delete multiple Photos assets in a single change request — one permission prompt.
+    func deleteAssets(identifiers: [String]) async throws
 }
