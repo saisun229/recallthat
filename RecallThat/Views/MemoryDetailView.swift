@@ -20,11 +20,11 @@ struct MemoryDetailView: View {
         .navigationTitle(displayTitle)
         .navigationBarTitleDisplayMode(.inline)
         .confirmationDialog(
-            "Delete Original Screenshot?",
+            "Delete Original Photo?",
             isPresented: $viewModel.showDeleteConfirmation,
             titleVisibility: .visible
         ) {
-            Button("Delete Original Screenshot", role: .destructive) {
+            Button("Delete from Photos", role: .destructive) {
                 Task {
                     await viewModel.deleteOriginal(
                         photoService: appEnv.photoLibraryService,
@@ -34,7 +34,7 @@ struct MemoryDetailView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("The screenshot will be removed from your Photos library.\n\nWhat stays in RecallThat:\n• Extracted text\n• Title\n• Date\n• Thumbnail\n\nThis cannot be undone.")
+            Text("The photo is removed from your Photos library.\n\nWhat stays in RecallThat:\n• Extracted text\n• Title\n• Date\n• Thumbnail\n\nThis cannot be undone.")
         }
         .alert("Delete Failed", isPresented: .init(
             get: { viewModel.deleteError != nil },
@@ -46,7 +46,7 @@ struct MemoryDetailView: View {
         }
     }
 
-    // MARK: - Sections
+    // MARK: - Thumbnail section
 
     @ViewBuilder
     private var thumbnailSection: some View {
@@ -60,22 +60,64 @@ struct MemoryDetailView: View {
         }
     }
 
+    // MARK: - Info section
+
     private var infoSection: some View {
-        Section("Info") {
-            LabeledContent("Date", value: viewModel.memory.createdAt.formatted(date: .long, time: .shortened))
-            LabeledContent("Indexed", value: viewModel.memory.importedAt.formatted(date: .abbreviated, time: .omitted))
-            LabeledContent("OCR", value: viewModel.memory.ocrStatus.label)
-            LabeledContent("Original") {
-                if viewModel.memory.originalExists {
-                    Label("Available", systemImage: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                } else {
-                    Label("Deleted", systemImage: "trash")
-                        .foregroundStyle(.secondary)
-                }
+        Section {
+            // Captured date
+            LabeledContent {
+                Text(viewModel.memory.createdAt.formatted(date: .abbreviated, time: .shortened))
+                    .foregroundStyle(.primary)
+            } label: {
+                Label("Captured", systemImage: "camera")
+                    .foregroundStyle(.secondary)
             }
+
+            // Indexed date with green dot indicator
+            LabeledContent {
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(indexedDotColor)
+                        .frame(width: 8, height: 8)
+                    Text(viewModel.memory.importedAt.formatted(date: .abbreviated, time: .omitted))
+                        .foregroundStyle(.primary)
+                }
+            } label: {
+                Label("Indexed", systemImage: "sparkles")
+                    .foregroundStyle(.secondary)
+            }
+
+            // Text extraction status
+            LabeledContent {
+                Text(viewModel.memory.ocrStatus.label)
+                    .foregroundStyle(ocrStatusColor)
+                    .fontWeight(.medium)
+            } label: {
+                Label("Text", systemImage: "text.page")
+                    .foregroundStyle(.secondary)
+            }
+
+            // Original photo status
+            LabeledContent {
+                if viewModel.memory.originalExists {
+                    Label("In Photos", systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                        .labelStyle(.titleAndIcon)
+                } else {
+                    Label("Deleted", systemImage: "photo.badge.xmark")
+                        .foregroundStyle(.secondary)
+                        .labelStyle(.titleAndIcon)
+                }
+            } label: {
+                Label("Original", systemImage: "photo")
+                    .foregroundStyle(.secondary)
+            }
+        } header: {
+            Text("Details")
         }
     }
+
+    // MARK: - OCR text section
 
     private var ocrTextSection: some View {
         Section("Extracted Text") {
@@ -91,25 +133,42 @@ struct MemoryDetailView: View {
         }
     }
 
+    // MARK: - Delete section
+
     @ViewBuilder
     private var deleteSection: some View {
         if viewModel.memory.originalExists {
             Section {
-                Button(role: .destructive) {
+                Button {
                     viewModel.showDeleteConfirmation = true
                 } label: {
                     if viewModel.isDeleting {
-                        HStack {
+                        HStack(spacing: 10) {
                             ProgressView()
                             Text("Deleting…")
+                                .foregroundStyle(.orange)
                         }
                     } else {
-                        Label("Delete Original Screenshot", systemImage: "trash")
+                        HStack(spacing: 12) {
+                            Image(systemName: "photo.badge.minus")
+                                .font(.title3)
+                                .foregroundStyle(.orange)
+                                .frame(width: 32)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Delete Original Photo")
+                                    .foregroundStyle(.orange)
+                                    .fontWeight(.medium)
+                                Text("Removes from Photos · Text stays in RecallThat")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                     }
                 }
                 .disabled(viewModel.isDeleting)
             } footer: {
-                Text("Removes the screenshot from your Photos library. The extracted text, title, and date stay in RecallThat so you can still search for this memory.")
+                Text("Your extracted text, title, and date remain fully searchable in RecallThat after the photo is deleted.")
                     .font(.footnote)
             }
         }
@@ -121,6 +180,19 @@ struct MemoryDetailView: View {
         viewModel.memory.title.isEmpty
             ? "Screenshot — \(viewModel.memory.createdAt.formatted(date: .abbreviated, time: .omitted))"
             : viewModel.memory.title
+    }
+
+    private var indexedDotColor: Color {
+        viewModel.memory.ocrStatus == .complete ? .green : Color.secondary.opacity(0.35)
+    }
+
+    private var ocrStatusColor: Color {
+        switch viewModel.memory.ocrStatus {
+        case .complete:   return .green
+        case .pending:    return .orange
+        case .failed:     return .red
+        case .notStarted: return .secondary
+        }
     }
 
     private var placeholderText: String {

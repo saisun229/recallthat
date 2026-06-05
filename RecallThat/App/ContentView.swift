@@ -5,7 +5,7 @@ struct ContentView: View {
         TabView {
             HomeView()
                 .tabItem {
-                    Label("Memories", systemImage: "rectangle.stack")
+                    Label("Memories", systemImage: "photo.stack.fill")
                 }
 
             SearchView()
@@ -15,7 +15,7 @@ struct ContentView: View {
 
             SettingsView()
                 .tabItem {
-                    Label("Settings", systemImage: "gear")
+                    Label("Settings", systemImage: "gearshape.fill")
                 }
         }
     }

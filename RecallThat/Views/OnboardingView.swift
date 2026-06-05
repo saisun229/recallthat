@@ -7,52 +7,77 @@ struct OnboardingView: View {
 
     private let pages: [OnboardingPage] = [
         OnboardingPage(
-            systemImage: "magnifyingglass",
-            title: "Find what you forgot",
+            systemImage: "text.magnifyingglass",
+            color: .blue,
+            title: "Find What You Forgot",
             body: "RecallThat turns your screenshots into searchable memory. Type anything you remember and find it instantly."
         ),
         OnboardingPage(
-            systemImage: "lock.shield",
-            title: "Everything stays on your device",
+            systemImage: "lock.shield.fill",
+            color: .green,
+            title: "Everything Stays On-Device",
             body: "Text is extracted using Apple's on-device OCR. Your screenshots and their contents are never uploaded or shared."
         ),
         OnboardingPage(
-            systemImage: "trash",
-            title: "Delete clutter when you're ready",
-            body: "Once a screenshot is indexed you can delete the original from Photos. The text, title, and date stay in RecallThat so you can always search for it."
+            systemImage: "photo.badge.minus",
+            color: .orange,
+            title: "Delete Clutter Anytime",
+            body: "Once indexed, delete the original from Photos. The extracted text and title stay in RecallThat so you can always search for it."
         ),
     ]
 
     var body: some View {
-        VStack(spacing: 0) {
-            TabView(selection: $currentPage) {
-                ForEach(pages.indices, id: \.self) { index in
-                    pageView(pages[index])
-                        .tag(index)
-                }
-            }
-            .tabViewStyle(.page(indexDisplayMode: .always))
-            .indexViewStyle(.page(backgroundDisplayMode: .always))
+        ZStack {
+            // Animated gradient tint shifts with each page
+            LinearGradient(
+                colors: [pages[currentPage].color.opacity(0.18), Color(.systemBackground)],
+                startPoint: .top,
+                endPoint: .center
+            )
+            .ignoresSafeArea()
+            .animation(.easeInOut(duration: 0.45), value: currentPage)
 
-            actionButton
-                .padding(.horizontal, 32)
-                .padding(.bottom, 48)
-                .padding(.top, 16)
+            VStack(spacing: 0) {
+                TabView(selection: $currentPage) {
+                    ForEach(pages.indices, id: \.self) { index in
+                        pageView(pages[index])
+                            .tag(index)
+                    }
+                }
+                .tabViewStyle(.page(indexDisplayMode: .always))
+                .indexViewStyle(.page(backgroundDisplayMode: .always))
+
+                actionButton
+                    .padding(.horizontal, 28)
+                    .padding(.bottom, 52)
+                    .padding(.top, 12)
+            }
         }
     }
 
     private func pageView(_ page: OnboardingPage) -> some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 0) {
             Spacer()
 
-            Image(systemName: page.systemImage)
-                .font(.system(size: 72, weight: .thin))
-                .foregroundStyle(.tint)
+            // Layered circle icon
+            ZStack {
+                Circle()
+                    .fill(page.color.opacity(0.12))
+                    .frame(width: 160, height: 160)
+                Circle()
+                    .fill(page.color.opacity(0.18))
+                    .frame(width: 116, height: 116)
+                Image(systemName: page.systemImage)
+                    .font(.system(size: 52, weight: .medium))
+                    .foregroundStyle(page.color)
+                    .symbolRenderingMode(.hierarchical)
+            }
+            .padding(.bottom, 36)
 
-            VStack(spacing: 12) {
+            VStack(spacing: 14) {
                 Text(page.title)
-                    .font(.title)
-                    .fontWeight(.semibold)
+                    .font(.title2)
+                    .fontWeight(.bold)
                     .multilineTextAlignment(.center)
 
                 Text(page.body)
@@ -60,6 +85,7 @@ struct OnboardingView: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 8)
             }
             .padding(.horizontal, 32)
 
@@ -71,7 +97,7 @@ struct OnboardingView: View {
     private var actionButton: some View {
         Button {
             if currentPage < pages.count - 1 {
-                withAnimation { currentPage += 1 }
+                withAnimation(.easeInOut(duration: 0.3)) { currentPage += 1 }
             } else {
                 onComplete()
             }
@@ -82,12 +108,14 @@ struct OnboardingView: View {
                 .padding(.vertical, 16)
         }
         .buttonStyle(.borderedProminent)
-        .animation(.none, value: currentPage)
+        .tint(pages[currentPage].color)
+        .animation(.easeInOut(duration: 0.25), value: currentPage)
     }
 }
 
 private struct OnboardingPage {
     let systemImage: String
+    let color: Color
     let title: String
     let body: String
 }

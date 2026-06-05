@@ -5,6 +5,7 @@ struct HomeView: View {
     @Environment(AppEnvironment.self) private var appEnv
     @State private var viewModel = HomeViewModel()
     @State private var safeDeleteTarget: Memory? = nil
+    @State private var hardDeleteTarget: Memory? = nil
     @State private var showBatchSafeDeleteConfirm = false
     @State private var showBatchHardDeleteConfirm = false
 
@@ -40,7 +41,8 @@ struct HomeView: View {
         .refreshable {
             await runFullSync()
         }
-        .alert("Delete Original Screenshot?", isPresented: .init(
+        // Safe Delete confirmation — removes photo from Photos, keeps text
+        .alert("Delete Original Photo?", isPresented: .init(
             get: { safeDeleteTarget != nil },
             set: { if !$0 { safeDeleteTarget = nil } }
         )) {
@@ -57,10 +59,31 @@ struct HomeView: View {
             }
             Button("Cancel", role: .cancel) { safeDeleteTarget = nil }
         } message: {
-            Text("The screenshot is removed from Photos. The extracted text stays in RecallThat.")
+            Text("The original photo is removed from your Photos library. The extracted text stays in RecallThat — you can still search for this memory.")
         }
+        // Hard Delete confirmation — removes everything permanently
+        .alert("Delete Memory Forever?", isPresented: .init(
+            get: { hardDeleteTarget != nil },
+            set: { if !$0 { hardDeleteTarget = nil } }
+        )) {
+            Button("Delete Forever", role: .destructive) {
+                guard let target = hardDeleteTarget else { return }
+                hardDeleteTarget = nil
+                Task {
+                    viewModel.selectedIDs = [target.id]
+                    await viewModel.hardDeleteSelected(
+                        photoService: appEnv.photoLibraryService,
+                        repository: appEnv.memoryRepository
+                    )
+                }
+            }
+            Button("Cancel", role: .cancel) { hardDeleteTarget = nil }
+        } message: {
+            Text("Removes the memory and its original photo from RecallThat completely. This cannot be undone.")
+        }
+        // Batch safe delete
         .confirmationDialog(
-            "Safe Delete \(viewModel.selectedIDs.count) Screenshot\(viewModel.selectedIDs.count == 1 ? "" : "s")?",
+            "Delete Photos for \(viewModel.selectedIDs.count) Screenshot\(viewModel.selectedIDs.count == 1 ? "" : "s")?",
             isPresented: $showBatchSafeDeleteConfirm,
             titleVisibility: .visible
         ) {
@@ -74,8 +97,9 @@ struct HomeView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Original screenshots are removed from Photos. Extracted text stays searchable in RecallThat.")
+            Text("Original photos are removed from your Photos library. Extracted text stays searchable in RecallThat.")
         }
+        // Batch hard delete
         .confirmationDialog(
             "Delete \(viewModel.selectedIDs.count) Memor\(viewModel.selectedIDs.count == 1 ? "y" : "ies") Forever?",
             isPresented: $showBatchHardDeleteConfirm,
@@ -91,7 +115,7 @@ struct HomeView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This permanently removes the memories and their original screenshots from RecallThat. This cannot be undone.")
+            Text("Permanently removes the memories and original photos from RecallThat. This cannot be undone.")
         }
     }
 
@@ -101,6 +125,7 @@ struct HomeView: View {
     private var authorizedContent: some View {
         if viewModel.isLoading {
             ProgressView("Loading…")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let error = viewModel.errorMessage {
             errorView(message: error)
         } else if viewModel.memories.isEmpty {
@@ -109,6 +134,8 @@ struct HomeView: View {
             memoriesList
         }
     }
+
+    // MARK: - Memories list
 
     private var memoriesList: some View {
         List {
@@ -129,13 +156,20 @@ struct HomeView: View {
                         MemoryCardView(memory: memory)
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        // Orange: safe delete — photo gone, text stays
                         if memory.originalExists && memory.sourceType == .screenshot {
                             Button {
                                 safeDeleteTarget = memory
                             } label: {
-                                Label("Safe Delete", systemImage: "photo.badge.minus")
+                                Label("Delete\nPhoto", systemImage: "photo.badge.minus")
                             }
                             .tint(.orange)
+                        }
+                        // Red: hard delete — removes everything permanently
+                        Button(role: .destructive) {
+                            hardDeleteTarget = memory
+                        } label: {
+                            Label("Delete\nForever", systemImage: "trash.fill")
                         }
                     }
                 }
@@ -149,43 +183,97 @@ struct HomeView: View {
         }
     }
 
+    // MARK: - Batch action bar
+
     private var batchActionBar: some View {
         let hasOriginals = viewModel.memories.contains {
             viewModel.selectedIDs.contains($0.id) && $0.originalExists && $0.sourceType == .screenshot
         }
+        let count = viewModel.selectedIDs.count
 
-        return HStack(spacing: 12) {
-            if hasOriginals {
-                Button {
-                    showBatchSafeDeleteConfirm = true
-                } label: {
-                    Label("Safe Delete (\(viewModel.selectedIDs.count))", systemImage: "photo.badge.minus")
+        return VStack(spacing: 0) {
+            Divider()
+            HStack(spacing: 10) {
+                if hasOriginals {
+                    Button {
+                        showBatchSafeDeleteConfirm = true
+                    } label: {
+                        VStack(spacing: 3) {
+                            Image(systemName: "photo.badge.minus")
+                                .font(.title3)
+                            Text("Delete Photos")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                            Text("text stays")
+                                .font(.caption2)
+                                .opacity(0.75)
+                        }
                         .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.orange)
+                }
+
+                Button {
+                    showBatchHardDeleteConfirm = true
+                } label: {
+                    VStack(spacing: 3) {
+                        Image(systemName: "trash.fill")
+                            .font(.title3)
+                        Text("Delete Forever")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                        Text("\(count) item\(count == 1 ? "" : "s")")
+                            .font(.caption2)
+                            .opacity(0.75)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(.orange)
+                .tint(.red)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .padding(.bottom, 4)
+            .background(.regularMaterial)
+        }
+    }
+
+    // MARK: - Empty / error states
+
+    private var emptyView: some View {
+        VStack(spacing: 24) {
+            ZStack {
+                Circle()
+                    .fill(Color.accentColor.opacity(0.08))
+                    .frame(width: 120, height: 120)
+                Image(systemName: "photo.stack")
+                    .font(.system(size: 52, weight: .ultraLight))
+                    .foregroundStyle(Color.accentColor.opacity(0.7))
+            }
+
+            VStack(spacing: 8) {
+                Text("No Memories Yet")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                Text("Take a screenshot. Open RecallThat.\nText is indexed automatically.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
             }
 
             Button {
-                showBatchHardDeleteConfirm = true
+                Task { await runFullSync() }
             } label: {
-                Label("Delete (\(viewModel.selectedIDs.count))", systemImage: "trash")
-                    .frame(maxWidth: .infinity)
+                Label("Sync Now", systemImage: "arrow.clockwise")
+                    .font(.subheadline.weight(.medium))
             }
-            .buttonStyle(.borderedProminent)
-            .tint(.red)
+            .buttonStyle(.bordered)
         }
-        .padding(.horizontal)
-        .padding(.vertical, 12)
-        .background(.regularMaterial)
-    }
-
-    private var emptyView: some View {
-        ContentUnavailableView(
-            "No screenshots found",
-            systemImage: "rectangle.stack",
-            description: Text("Pull down to refresh, or check that RecallThat has Full Access in Settings → Privacy → Photos.")
-        )
+        .padding(40)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func errorView(message: String) -> some View {
@@ -235,8 +323,11 @@ struct HomeView: View {
                     Label("Retry Failed", systemImage: "arrow.clockwise")
                 }
             } else if !viewModel.memories.isEmpty {
-                Button("Select") {
+                Button {
                     viewModel.toggleSelecting()
+                } label: {
+                    Image(systemName: "checkmark.circle")
+                        .accessibilityLabel("Select memories")
                 }
             }
         }

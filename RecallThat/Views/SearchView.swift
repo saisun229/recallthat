@@ -9,9 +9,9 @@ struct SearchView: View {
             Group {
                 if viewModel.query.isEmpty {
                     ContentUnavailableView(
-                        "Search your memories",
-                        systemImage: "magnifyingglass",
-                        description: Text("Type something you remember from a screenshot.")
+                        "Search Your Memories",
+                        systemImage: "text.magnifyingglass",
+                        description: Text("Type any text you remember seeing in a screenshot.")
                     )
                 } else if viewModel.results.isEmpty {
                     ContentUnavailableView.search(text: viewModel.query)
@@ -25,7 +25,7 @@ struct SearchView: View {
                 }
             }
             .navigationTitle("Search")
-            .searchable(text: $viewModel.query, prompt: "Search your memories…")
+            .searchable(text: $viewModel.query, prompt: "Search memories…")
             .onChange(of: viewModel.query) { _, _ in
                 viewModel.search(using: appEnv.searchService)
             }
@@ -33,7 +33,6 @@ struct SearchView: View {
         .task {
             await viewModel.loadMemories(from: appEnv.memoryRepository)
         }
-        // Reload index each time the tab becomes visible so OCR results appear
         .onAppear {
             Task { await viewModel.loadMemories(from: appEnv.memoryRepository) }
         }

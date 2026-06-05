@@ -13,63 +13,98 @@ struct MemoryCardView: View {
                     .font(.title2)
                     .foregroundStyle(isSelected ? Color.accentColor : .secondary)
                     .frame(width: 28, alignment: .center)
-                    .padding(.top, 10)
+                    .padding(.top, 8)
+                    .animation(.easeInOut(duration: 0.15), value: isSelected)
             }
 
-            thumbnail
+            thumbnailView
 
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(displayTitle)
-                    .font(.headline)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
                     .lineLimit(1)
+                    .foregroundStyle(.primary)
 
                 if !memory.ocrText.isEmpty {
                     Text(memory.ocrText)
-                        .font(.subheadline)
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
                 }
 
-                HStack(spacing: 6) {
+                Spacer(minLength: 6)
+
+                HStack(alignment: .center, spacing: 4) {
                     Text(memory.createdAt.formatted(date: .abbreviated, time: .omitted))
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundStyle(.tertiary)
 
                     Spacer()
 
                     if memory.sourceType == .screenshot && !memory.originalExists {
-                        Label("Original deleted", systemImage: "trash")
+                        Image(systemName: "photo.badge.checkmark")
                             .font(.caption2)
-                            .foregroundStyle(.tertiary)
-                            .labelStyle(.iconOnly)
+                            .foregroundStyle(.secondary.opacity(0.5))
                     }
 
-                    OCRStatusBadge(status: memory.ocrStatus)
+                    OCRStatusDot(status: memory.ocrStatus)
                 }
             }
+            .padding(.vertical, 2)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 6)
+    }
+
+    // MARK: - Thumbnail
+
+    @ViewBuilder
+    private var thumbnailView: some View {
+        ZStack(alignment: .bottomTrailing) {
+            thumbnailImage
+            sourceTypeBadge
+                .offset(x: 4, y: 4)
+        }
     }
 
     @ViewBuilder
-    private var thumbnail: some View {
+    private var thumbnailImage: some View {
         if let identifier = memory.photoAssetIdentifier {
-            AssetThumbnailView(identifier: identifier, size: 60)
+            AssetThumbnailView(identifier: identifier, size: 64)
         } else if let path = memory.localThumbnailPath,
                   let uiImage = UIImage(contentsOfFile: path) {
             Image(uiImage: uiImage)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: 60, height: 60)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .frame(width: 64, height: 64)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
         } else {
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.secondary.opacity(0.12))
-                .frame(width: 60, height: 60)
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.secondary.opacity(0.1))
+                .frame(width: 64, height: 64)
                 .overlay(
                     Image(systemName: placeholderIcon)
+                        .font(.title3)
                         .foregroundStyle(.tertiary)
                 )
+        }
+    }
+
+    @ViewBuilder
+    private var sourceTypeBadge: some View {
+        switch memory.sourceType {
+        case .screenshot, .sharedImage:
+            EmptyView()
+        case .sharedURL:
+            SourceBadge(systemImage: "link", color: .blue)
+        case .sharedText:
+            SourceBadge(systemImage: "text.quote", color: .purple)
+        case .sharedPDF:
+            SourceBadge(systemImage: "doc.fill", color: .red)
+        case .sharedVideo:
+            SourceBadge(systemImage: "play.fill", color: .indigo)
+        case .sharedAudio:
+            SourceBadge(systemImage: "waveform", color: .teal)
         }
     }
 
@@ -90,27 +125,44 @@ struct MemoryCardView: View {
     }
 }
 
-// MARK: - OCR Status Badge
+// MARK: - Source Badge
 
-private struct OCRStatusBadge: View {
+private struct SourceBadge: View {
+    let systemImage: String
+    let color: Color
+
+    var body: some View {
+        Image(systemName: systemImage)
+            .font(.system(size: 8, weight: .bold))
+            .foregroundStyle(.white)
+            .padding(4)
+            .background(color, in: Circle())
+    }
+}
+
+// MARK: - OCR Status Dot
+
+private struct OCRStatusDot: View {
     let status: OCRStatus
 
     var body: some View {
-        Text(status.label)
-            .font(.caption2)
-            .fontWeight(.medium)
-            .foregroundStyle(color)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(color.opacity(0.12), in: Capsule())
-    }
-
-    private var color: Color {
         switch status {
-        case .notStarted: return .secondary
-        case .pending:    return .orange
-        case .complete:   return .green
-        case .failed:     return .red
+        case .complete:
+            Circle()
+                .fill(Color.green)
+                .frame(width: 8, height: 8)
+        case .pending:
+            Circle()
+                .fill(Color.orange)
+                .frame(width: 8, height: 8)
+        case .failed:
+            Image(systemName: "exclamationmark.circle.fill")
+                .font(.system(size: 10))
+                .foregroundStyle(.red)
+        case .notStarted:
+            Circle()
+                .fill(Color.secondary.opacity(0.3))
+                .frame(width: 8, height: 8)
         }
     }
 }
