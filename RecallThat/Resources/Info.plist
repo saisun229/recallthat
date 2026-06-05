@@ -11,25 +11,39 @@
     <key>CFBundleIdentifier</key>
     <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>$(CURRENT_PROJECT_VERSION)</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0</string>
+    <string>$(MARKETING_VERSION)</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
-    <key>UIRequiredDeviceCapabilities</key>
-    <array>
-        <string>armv7</string>
-    </array>
+
+    <!-- Encryption — app uses only standard iOS HTTPS/TLS, no custom crypto -->
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
+
+    <!-- Device orientation — portrait only -->
     <key>UISupportedInterfaceOrientations</key>
     <array>
         <string>UIInterfaceOrientationPortrait</string>
     </array>
+
+    <!-- iOS 17+ requires arm64; armv7 capability removed (would exclude valid devices) -->
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>arm64</string>
+    </array>
+
+    <!-- Photos access — required for screenshot indexing -->
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>RecallThat needs access to your photos to find and index your screenshots. Everything stays on your device — nothing is uploaded.</string>
+    <string>RecallThat reads your screenshots to extract and index their text. Everything stays on your device — nothing is uploaded.</string>
+
+    <!-- Required to delete original screenshots after they are indexed -->
     <key>NSPhotoLibraryAddUsageDescription</key>
-    <string>RecallThat needs photo library access to delete original screenshots after they have been indexed.</string>
+    <string>RecallThat needs this permission to delete the original screenshot from your Photos library when you choose Safe Delete.</string>
+
+    <!-- Launch screen — SwiftUI handles it; empty dict is correct -->
     <key>UILaunchScreen</key>
     <dict/>
 </dict>

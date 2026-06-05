@@ -16,7 +16,12 @@ struct RecallThatApp: App {
                 return c
             }
         }
-        return try! ModelContainer(for: MemoryItem.self)
+        // Fallback: in-app store (simulator or group container unavailable)
+        do {
+            return try ModelContainer(for: MemoryItem.self)
+        } catch {
+            fatalError("RecallThat could not initialize its data store: \(error)")
+        }
     }()
 
     var body: some Scene {

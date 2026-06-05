@@ -9,8 +9,8 @@ struct SettingsView: View {
         NavigationStack {
             List {
                 Section("About") {
-                    LabeledContent("Version", value: "1.0")
-                    LabeledContent("Build", value: "1")
+                    LabeledContent("Version", value: appVersion)
+                    LabeledContent("Build", value: appBuild)
                 }
 
                 Section("Privacy") {
@@ -67,6 +67,14 @@ struct SettingsView: View {
                 Button("OK") {}
             }
         }
+    }
+
+    private var appVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
+    }
+
+    private var appBuild: String {
+        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "—"
     }
 
     private func deleteAll() async {
