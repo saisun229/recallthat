@@ -26,6 +26,7 @@ struct HomeView: View {
                 }
             }
             .navigationTitle("RecallThat")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbarContent }
         }
         .task {
@@ -176,6 +177,7 @@ struct HomeView: View {
             }
         }
         .listStyle(.plain)
+        .listRowSpacing(0)
         .overlay(alignment: .bottom) {
             if viewModel.isSelecting && !viewModel.selectedIDs.isEmpty {
                 batchActionBar
@@ -189,56 +191,33 @@ struct HomeView: View {
         let hasOriginals = viewModel.memories.contains {
             viewModel.selectedIDs.contains($0.id) && $0.originalExists && $0.sourceType == .screenshot
         }
-        let count = viewModel.selectedIDs.count
 
-        return VStack(spacing: 0) {
-            Divider()
-            HStack(spacing: 10) {
-                if hasOriginals {
-                    Button {
-                        showBatchSafeDeleteConfirm = true
-                    } label: {
-                        VStack(spacing: 3) {
-                            Image(systemName: "photo.badge.minus")
-                                .font(.title3)
-                            Text("Delete Photos")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                            Text("text stays")
-                                .font(.caption2)
-                                .opacity(0.75)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.orange)
-                }
-
+        return HStack(spacing: 0) {
+            if hasOriginals {
                 Button {
-                    showBatchHardDeleteConfirm = true
+                    showBatchSafeDeleteConfirm = true
                 } label: {
-                    VStack(spacing: 3) {
-                        Image(systemName: "trash.fill")
-                            .font(.title3)
-                        Text("Delete Forever")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                        Text("\(count) item\(count == 1 ? "" : "s")")
-                            .font(.caption2)
-                            .opacity(0.75)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
+                    Label("Delete Photos", systemImage: "photo.badge.minus")
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.red)
+                .foregroundStyle(.secondary)
+
+                Divider().frame(height: 22)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .padding(.bottom, 4)
-            .background(.regularMaterial)
+
+            Button {
+                showBatchHardDeleteConfirm = true
+            } label: {
+                Label("Delete Forever", systemImage: "trash")
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+            }
+            .foregroundStyle(.red)
         }
+        .font(.subheadline.weight(.medium))
+        .background(.regularMaterial)
+        .overlay(alignment: .top) { Divider() }
     }
 
     // MARK: - Empty / error states
