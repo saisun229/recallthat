@@ -11,6 +11,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.recallthat.App.AppEnvironment
@@ -22,11 +24,16 @@ fun HomeScreen(env: AppEnvironment, onMemoryClick: (String) -> Unit) {
     val vm: HomeViewModel = viewModel()
     val memories by vm.memories.collectAsState()
     val isLoading by vm.isLoading.collectAsState()
-    val isImporting by vm.isImporting.collectAsState()
     val isRunningOCR by vm.isRunningOCR.collectAsState()
     val ocrProgress by vm.ocrProgress.collectAsState()
     val hasPermission by vm.hasPhotoPermission.collectAsState()
     val errorMessage by vm.errorMessage.collectAsState()
+    val isSelecting by vm.isSelecting.collectAsState()
+    val selectedIDs by vm.selectedIDs.collectAsState()
+    val isSyncing by vm.isSyncing.collectAsState()
+
+    var showSafeDeleteConfirm by remember { mutableStateOf(false) }
+    var showHardDeleteConfirm by remember { mutableStateOf(false) }
 
     val permissionToRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
         Manifest.permission.READ_MEDIA_IMAGES
@@ -37,14 +44,43 @@ fun HomeScreen(env: AppEnvironment, onMemoryClick: (String) -> Unit) {
         ActivityResultContracts.RequestPermission()
     ) { granted -> vm.onPermissionResult(granted) }
 
+    val pullRefreshState = rememberPullToRefreshState()
+
+    // Trigger sync when user pulls to refresh
+    if (pullRefreshState.isRefreshing) {
+        LaunchedEffect(Unit) {
+            vm.runFullSync(env)
+        }
+    }
+
+    // End pull-to-refresh spinner when sync completes
+    LaunchedEffect(isSyncing) {
+        if (!isSyncing && pullRefreshState.isRefreshing) {
+            pullRefreshState.endRefresh()
+        }
+    }
+
+    // Initial load: check permission, then sync
     LaunchedEffect(Unit) {
         vm.checkPermission(env)
-        vm.load(env)
+    }
+    LaunchedEffect(hasPermission) {
+        if (hasPermission) vm.runFullSync(env)
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("RecallThat") })
+            TopAppBar(
+                title = { Text("RecallThat") },
+                actions = {
+                    if (isSelecting) {
+                        TextButton(onClick = { vm.selectAll() }) { Text("All") }
+                        TextButton(onClick = { vm.toggleSelecting() }) { Text("Cancel") }
+                    } else {
+                        TextButton(onClick = { vm.toggleSelecting() }) { Text("Select") }
+                    }
+                }
+            )
         }
     ) { padding ->
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
@@ -55,67 +91,102 @@ fun HomeScreen(env: AppEnvironment, onMemoryClick: (String) -> Unit) {
 
                 isLoading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
 
-                else -> Column(modifier = Modifier.fillMaxSize()) {
-                    // Action bar
-                    Row(
+                else -> {
+                    Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            .fillMaxSize()
+                            .nestedScroll(pullRefreshState.nestedScrollConnection)
                     ) {
-                        OutlinedButton(
-                            onClick = { vm.importScreenshots(env) },
-                            enabled = !isImporting && !isRunningOCR,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            if (isImporting)
-                                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-                            else
-                                Text("Import")
-                        }
-                        Button(
-                            onClick = { vm.runOCR(env) },
-                            enabled = !isRunningOCR && !isImporting,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            if (isRunningOCR)
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(16.dp),
-                                    strokeWidth = 2.dp,
-                                    color = MaterialTheme.colorScheme.onPrimary
+                        // OCR progress bar
+                        if (isRunningOCR) {
+                            ocrProgress?.let { p ->
+                                LinearProgressIndicator(
+                                    progress = { p.completed.toFloat() / p.total.coerceAtLeast(1) },
+                                    modifier = Modifier.fillMaxWidth()
                                 )
-                            else
-                                Text("Index")
+                                Text(
+                                    text = "Indexing ${p.completed} / ${p.total}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                                )
+                            } ?: LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         }
-                    }
 
-                    // OCR progress
-                    ocrProgress?.let { p ->
-                        LinearProgressIndicator(
-                            progress = { p.completed.toFloat() / p.total.coerceAtLeast(1) },
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
-                        )
-                        Text(
-                            text = "Indexing ${p.completed} / ${p.total}",
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                        )
-                    }
-
-                    if (memories.isEmpty()) {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("No memories yet. Tap Import to get started.",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    } else {
-                        LazyColumn(
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            items(memories, key = { it.id.toString() }) { memory ->
-                                MemoryCardView(memory = memory) {
-                                    onMemoryClick(memory.id.toString())
+                        if (memories.isEmpty()) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "No memories yet.\nPull down to sync.",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
+                        } else {
+                            LazyColumn(
+                                contentPadding = PaddingValues(
+                                    start = 16.dp, end = 16.dp, top = 8.dp,
+                                    bottom = if (isSelecting) 88.dp else 16.dp
+                                ),
+                                verticalArrangement = Arrangement.spacedBy(10.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                items(memories, key = { it.id.toString() }) { memory ->
+                                    MemoryCardView(
+                                        memory = memory,
+                                        isSelecting = isSelecting,
+                                        isSelected = memory.id in selectedIDs,
+                                        onLongClick = {
+                                            if (!isSelecting) vm.toggleSelecting()
+                                            vm.toggleSelection(memory.id)
+                                        },
+                                        onClick = {
+                                            if (isSelecting) vm.toggleSelection(memory.id)
+                                            else onMemoryClick(memory.id.toString())
+                                        }
+                                    )
                                 }
+                            }
+                        }
+                    }
+
+                    // Pull-to-refresh indicator
+                    PullToRefreshContainer(
+                        state = pullRefreshState,
+                        modifier = Modifier.align(Alignment.TopCenter)
+                    )
+
+                    // Batch action bar
+                    if (isSelecting) {
+                        Surface(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .fillMaxWidth(),
+                            tonalElevation = 8.dp,
+                            shadowElevation = 8.dp
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                val hasSelection = selectedIDs.isNotEmpty()
+                                OutlinedButton(
+                                    onClick = { showSafeDeleteConfirm = true },
+                                    enabled = hasSelection,
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        contentColor = Color(0xFF34C759)
+                                    )
+                                ) { Text("Safe Delete") }
+                                Button(
+                                    onClick = { showHardDeleteConfirm = true },
+                                    enabled = hasSelection,
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.error
+                                    )
+                                ) { Text("Hard Delete") }
                             }
                         }
                     }
@@ -125,12 +196,60 @@ fun HomeScreen(env: AppEnvironment, onMemoryClick: (String) -> Unit) {
             // Error snackbar
             errorMessage?.let { msg ->
                 Snackbar(
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(16.dp),
                     action = {
                         TextButton(onClick = { vm.dismissError() }) { Text("Dismiss") }
                     }
                 ) { Text(msg) }
             }
         }
+    }
+
+    // Safe delete confirmation
+    if (showSafeDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showSafeDeleteConfirm = false },
+            title = { Text("Safe Delete") },
+            text = {
+                Text(
+                    "Remove ${selectedIDs.size} original photo(s) from your library? " +
+                    "The indexed text will be kept so you can still search it."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    vm.safeDeleteSelected(env)
+                    showSafeDeleteConfirm = false
+                }) { Text("Delete Photos", color = Color(0xFF34C759)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSafeDeleteConfirm = false }) { Text("Cancel") }
+            }
+        )
+    }
+
+    // Hard delete confirmation
+    if (showHardDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showHardDeleteConfirm = false },
+            title = { Text("Delete Everything") },
+            text = {
+                Text(
+                    "Permanently delete ${selectedIDs.size} item(s) and their original photos? " +
+                    "This cannot be undone."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    vm.hardDeleteSelected(env)
+                    showHardDeleteConfirm = false
+                }) { Text("Delete All", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showHardDeleteConfirm = false }) { Text("Cancel") }
+            }
+        )
     }
 }

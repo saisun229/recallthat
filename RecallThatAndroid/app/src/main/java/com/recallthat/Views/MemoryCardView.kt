@@ -1,12 +1,14 @@
 package com.recallthat.Views
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,16 +25,36 @@ import java.util.Locale
 
 private val dateFormatter = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MemoryCardView(memory: Memory, onClick: () -> Unit) {
+fun MemoryCardView(
+    memory: Memory,
+    isSelecting: Boolean = false,
+    isSelected: Boolean = false,
+    onLongClick: () -> Unit = {},
+    onClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .combinedClickable(onLongClick = onLongClick, onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 0.dp else 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected)
+                MaterialTheme.colorScheme.primaryContainer
+            else
+                MaterialTheme.colorScheme.surface
+        )
     ) {
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (isSelecting) {
+                Checkbox(
+                    checked = isSelected,
+                    onCheckedChange = null,
+                    modifier = Modifier.padding(end = 4.dp)
+                )
+            }
             ThumbnailView(
                 uri = memory.photoAssetUri,
                 modifier = Modifier
@@ -65,8 +87,8 @@ fun MemoryCardView(memory: Memory, onClick: () -> Unit) {
 }
 
 private fun ocrStatusColor(status: OCRStatus): Color = when (status) {
-    OCRStatus.COMPLETE    -> Color(0xFF34C759)  // green
-    OCRStatus.PENDING     -> Color(0xFFFF9500)  // amber
-    OCRStatus.FAILED      -> Color(0xFFFF3B30)  // red
-    OCRStatus.NOT_STARTED -> Color(0xFFAAAAAA)  // grey
+    OCRStatus.COMPLETE    -> Color(0xFF34C759)
+    OCRStatus.PENDING     -> Color(0xFFFF9500)
+    OCRStatus.FAILED      -> Color(0xFFFF3B30)
+    OCRStatus.NOT_STARTED -> Color(0xFFAAAAAA)
 }

@@ -40,6 +40,9 @@ class HomeViewModel : ViewModel() {
     private val _selectedIDs = MutableStateFlow<Set<UUID>>(emptySet())
     val selectedIDs: StateFlow<Set<UUID>> = _selectedIDs
 
+    private val _isSyncing = MutableStateFlow(false)
+    val isSyncing: StateFlow<Boolean> = _isSyncing
+
     fun checkPermission(env: AppEnvironment) {
         _hasPhotoPermission.value = env.photoLibraryService.hasPermission()
     }
@@ -48,47 +51,32 @@ class HomeViewModel : ViewModel() {
         _hasPhotoPermission.value = granted
     }
 
-    fun load(env: AppEnvironment) {
+    fun runFullSync(env: AppEnvironment) {
+        if (_isSyncing.value) return
+        _isSyncing.value = true
         viewModelScope.launch {
-            _isLoading.value = true
             try {
+                _isLoading.value = true
                 _memories.value = env.memoryRepository.fetchAll()
-            } catch (e: Exception) {
-                _errorMessage.value = "Failed to load memories"
-            } finally {
                 _isLoading.value = false
-            }
-        }
-    }
 
-    fun importScreenshots(env: AppEnvironment) {
-        viewModelScope.launch {
-            _isImporting.value = true
-            try {
+                _isImporting.value = true
                 env.photoImportService.importNewScreenshots()
                 _memories.value = env.memoryRepository.fetchAll()
-            } catch (e: Exception) {
-                _errorMessage.value = "Import failed"
-            } finally {
                 _isImporting.value = false
-            }
-        }
-    }
 
-    fun runOCR(env: AppEnvironment) {
-        viewModelScope.launch {
-            _isRunningOCR.value = true
-            _ocrProgress.value = null
-            try {
-                env.ocrPipelineService.processQueue { progress ->
-                    _ocrProgress.value = progress
-                }
+                _isRunningOCR.value = true
+                _ocrProgress.value = null
+                env.ocrPipelineService.processQueue { _ocrProgress.value = it }
                 _memories.value = env.memoryRepository.fetchAll()
             } catch (e: Exception) {
-                _errorMessage.value = "OCR failed"
+                _errorMessage.value = "Sync failed"
             } finally {
+                _isLoading.value = false
+                _isImporting.value = false
                 _isRunningOCR.value = false
                 _ocrProgress.value = null
+                _isSyncing.value = false
             }
         }
     }
