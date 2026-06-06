@@ -35,12 +35,6 @@ fun HomeScreen(env: AppEnvironment, onMemoryClick: (String) -> Unit) {
     var showSafeDeleteConfirm by remember { mutableStateOf(false) }
     var showHardDeleteConfirm by remember { mutableStateOf(false) }
 
-    // Track whether the current sync was user-initiated (pull gesture)
-    var pullRefreshActive by remember { mutableStateOf(false) }
-    LaunchedEffect(isSyncing) {
-        if (!isSyncing) pullRefreshActive = false
-    }
-
     val permissionToRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
         Manifest.permission.READ_MEDIA_IMAGES
     else
@@ -62,6 +56,10 @@ fun HomeScreen(env: AppEnvironment, onMemoryClick: (String) -> Unit) {
                         TextButton(onClick = { vm.selectAll() }) { Text("All") }
                         TextButton(onClick = { vm.toggleSelecting() }) { Text("Cancel") }
                     } else {
+                        TextButton(
+                            onClick = { vm.runFullSync(env) },
+                            enabled = !isSyncing
+                        ) { Text(if (isSyncing) "Syncing…" else "Sync") }
                         TextButton(onClick = { vm.toggleSelecting() }) { Text("Select") }
                     }
                 }
@@ -78,7 +76,7 @@ fun HomeScreen(env: AppEnvironment, onMemoryClick: (String) -> Unit) {
 
                 else -> {
                     Column(modifier = Modifier.fillMaxSize()) {
-                        // OCR progress — only shown when indexing
+                        // OCR progress bar
                         if (isRunningOCR) {
                             ocrProgress?.let { p ->
                                 LinearProgressIndicator(
@@ -93,49 +91,40 @@ fun HomeScreen(env: AppEnvironment, onMemoryClick: (String) -> Unit) {
                             } ?: LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         }
 
-                        PullToRefreshBox(
-                            isRefreshing = pullRefreshActive,
-                            onRefresh = {
-                                pullRefreshActive = true
-                                vm.runFullSync(env)
-                            },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            if (memories.isEmpty()) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        "No memories yet.\nPull down to sync.",
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        textAlign = TextAlign.Center
+                        if (memories.isEmpty()) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "No memories yet.\nTap Sync to get started.",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        } else {
+                            LazyColumn(
+                                contentPadding = PaddingValues(
+                                    start = 16.dp, end = 16.dp, top = 8.dp,
+                                    bottom = if (isSelecting) 88.dp else 16.dp
+                                ),
+                                verticalArrangement = Arrangement.spacedBy(10.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                items(memories, key = { it.id.toString() }) { memory ->
+                                    MemoryCardView(
+                                        memory = memory,
+                                        isSelecting = isSelecting,
+                                        isSelected = memory.id in selectedIDs,
+                                        onLongClick = {
+                                            if (!isSelecting) vm.toggleSelecting()
+                                            vm.toggleSelection(memory.id)
+                                        },
+                                        onClick = {
+                                            if (isSelecting) vm.toggleSelection(memory.id)
+                                            else onMemoryClick(memory.id.toString())
+                                        }
                                     )
-                                }
-                            } else {
-                                LazyColumn(
-                                    contentPadding = PaddingValues(
-                                        start = 16.dp, end = 16.dp, top = 8.dp,
-                                        bottom = if (isSelecting) 88.dp else 16.dp
-                                    ),
-                                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                                    modifier = Modifier.fillMaxSize()
-                                ) {
-                                    items(memories, key = { it.id.toString() }) { memory ->
-                                        MemoryCardView(
-                                            memory = memory,
-                                            isSelecting = isSelecting,
-                                            isSelected = memory.id in selectedIDs,
-                                            onLongClick = {
-                                                if (!isSelecting) vm.toggleSelecting()
-                                                vm.toggleSelection(memory.id)
-                                            },
-                                            onClick = {
-                                                if (isSelecting) vm.toggleSelection(memory.id)
-                                                else onMemoryClick(memory.id.toString())
-                                            }
-                                        )
-                                    }
                                 }
                             }
                         }
