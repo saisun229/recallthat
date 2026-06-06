@@ -4,20 +4,7 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Lightbulb shape representing memory/recall -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M54,22 C40.7,22 30,32.7 30,46 C30,54.5 34.4,62 41,66.5 L41,76 L67,76 L67,66.5 C73.6,62 78,54.5 78,46 C78,32.7 67.3,22 54,22 Z"/>
-    <rect
-        android:fillColor="#FFFFFF"
-        android:left="43"
-        android:top="78"
-        android:right="65"
-        android:bottom="83"/>
-    <rect
-        android:fillColor="#FFFFFF"
-        android:left="45"
-        android:top="85"
-        android:right="63"
-        android:bottom="90"/>
+        android:pathData="M54,22 C40.7,22 30,32.7 30,46 C30,54.5 34.4,62 41,66.5 L41,76 L67,76 L67,66.5 C73.6,62 78,54.5 78,46 C78,32.7 67.3,22 54,22 Z M43,78 L65,78 L65,83 L43,83 Z M45,85 L63,85 L63,90 L45,90 Z"/>
 </vector>
