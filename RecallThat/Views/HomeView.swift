@@ -297,28 +297,48 @@ struct HomeView: View {
                     ProgressView()
                     Text("Importing…").font(.caption)
                 }
-            } else if viewModel.isRunningOCR, let progress = viewModel.ocrProgress {
+            } else if viewModel.isRunningOCR {
                 HStack(spacing: 6) {
                     ProgressView()
-                    Text(progress.description).font(.caption)
-                }
-            } else if viewModel.memories.contains(where: { $0.ocrStatus == .failed }) {
-                Button {
-                    Task {
-                        await viewModel.retryFailedOCR(
-                            using: appEnv.ocrPipelineService,
-                            repository: appEnv.memoryRepository
-                        )
+                    if let progress = viewModel.ocrProgress {
+                        Text(progress.description).font(.caption)
+                    } else {
+                        Text("Indexing…").font(.caption)
                     }
-                } label: {
-                    Label("Retry Failed", systemImage: "arrow.clockwise")
                 }
             } else if !viewModel.memories.isEmpty {
-                Button {
-                    viewModel.toggleSelecting()
+                Menu {
+                    if viewModel.memories.contains(where: { $0.ocrStatus == .failed }) {
+                        Button {
+                            Task {
+                                await viewModel.retryFailedOCR(
+                                    using: appEnv.ocrPipelineService,
+                                    repository: appEnv.memoryRepository
+                                )
+                            }
+                        } label: {
+                            Label("Retry Failed", systemImage: "arrow.clockwise.circle")
+                        }
+                    }
+                    Button {
+                        Task {
+                            await viewModel.reindexAll(
+                                using: appEnv.ocrPipelineService,
+                                repository: appEnv.memoryRepository
+                            )
+                        }
+                    } label: {
+                        Label("Reindex All", systemImage: "arrow.clockwise")
+                    }
+                    Divider()
+                    Button {
+                        viewModel.toggleSelecting()
+                    } label: {
+                        Label("Select", systemImage: "checkmark.circle")
+                    }
                 } label: {
-                    Image(systemName: "checkmark.circle")
-                        .accessibilityLabel("Select memories")
+                    Image(systemName: "ellipsis.circle")
+                        .accessibilityLabel("More options")
                 }
             }
         }
@@ -330,6 +350,7 @@ struct HomeView: View {
         await viewModel.load(from: appEnv.memoryRepository)
         guard viewModel.permissionStatus == .authorized || viewModel.permissionStatus == .limited else { return }
         await viewModel.importScreenshots(using: appEnv.photoImportService, repository: appEnv.memoryRepository)
+        await viewModel.resetFailedItems(in: appEnv.memoryRepository)
         await viewModel.runOCR(using: appEnv.ocrPipelineService, repository: appEnv.memoryRepository)
     }
 }

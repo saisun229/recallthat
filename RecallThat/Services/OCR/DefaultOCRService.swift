@@ -32,18 +32,20 @@ final class DefaultOCRService: OCRServiceProtocol {
         return try await withCheckedThrowingContinuation { continuation in
             let options = PHImageRequestOptions()
             options.deliveryMode = .highQualityFormat
-            options.isNetworkAccessAllowed = false
+            options.isNetworkAccessAllowed = true
             options.isSynchronous = false
 
+            var resumed = false
             PHImageManager.default().requestImage(
                 for: asset,
                 targetSize: PHImageManagerMaximumSize,
                 contentMode: .default,
                 options: options
             ) { image, info in
-                // Skip degraded (low-quality) intermediate deliveries
                 let isDegraded = info?[PHImageResultIsDegradedKey] as? Bool ?? false
                 if isDegraded { return }
+                guard !resumed else { return }
+                resumed = true
                 if let error = info?[PHImageErrorKey] as? Error {
                     continuation.resume(throwing: error)
                 } else if let image {

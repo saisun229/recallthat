@@ -40,17 +40,19 @@ struct AssetThumbnailView: View {
         return await withCheckedContinuation { continuation in
             let options = PHImageRequestOptions()
             options.deliveryMode = .opportunistic
-            options.isNetworkAccessAllowed = false
+            options.isNetworkAccessAllowed = true
 
+            var resumed = false
             PHImageManager.default().requestImage(
                 for: asset,
                 targetSize: targetSize,
                 contentMode: .aspectFill,
                 options: options
             ) { img, info in
-                // Skip degraded intermediate delivery; wait for the best available image
+                guard !resumed else { return }
                 let isDegraded = info?[PHImageResultIsDegradedKey] as? Bool ?? false
                 if isDegraded { return }
+                resumed = true
                 continuation.resume(returning: img)
             }
         }

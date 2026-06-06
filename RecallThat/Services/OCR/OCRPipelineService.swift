@@ -13,12 +13,14 @@ final class OCRPipelineService {
     }
 
     /// Processes all memories with ocrStatus == .notStarted that have a photo asset.
-    /// Calls onProgress after each item is processed (passes the memory ID).
-    func processQueue(onProgress: ((UUID) -> Void)? = nil) async {
+    /// Calls onStart with the total count, then onProgress after each item.
+    func processQueue(onStart: ((Int) -> Void)? = nil, onProgress: ((UUID) -> Void)? = nil) async {
         guard let memories = try? await repository.fetchAll() else { return }
         let queue = memories.filter {
             $0.ocrStatus == .notStarted && $0.photoAssetIdentifier != nil
         }
+        guard !queue.isEmpty else { return }
+        onStart?(queue.count)
         for memory in queue {
             await processOne(memory: memory)
             onProgress?(memory.id)
