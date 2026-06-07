@@ -19,9 +19,74 @@ final class HomeViewModel {
         var description: String { "Indexing \(completed) of \(total)…" }
     }
 
+    // MARK: - Debug entries (from failed share extension saves)
+
+    private(set) var debugEntries: [Memory] = []
+
+    /// IDs that belong to debug (failed share) entries, not the real database.
+    var debugEntryIDs: Set<UUID> { Set(debugEntries.map(\.id)) }
+
+    func loadDebugEntries() {
+        let defaults = UserDefaults(suiteName: "group.com.recallthat.app")
+        guard let raw = defaults?.array(forKey: "shareDebugEntries") as? [[String: String]] else {
+            debugEntries = []
+            return
+        }
+        debugEntries = raw.compactMap { dict in
+            guard let idStr = dict["id"], let id = UUID(uuidString: idStr),
+                  let tsStr = dict["ts"], let ts = Double(tsStr) else { return nil }
+            let date = Date(timeIntervalSince1970: ts)
+            let reason   = dict["why"]   ?? "Unknown error"
+            let types    = dict["types"] ?? ""
+            let url      = dict["url"]?.isEmpty == false ? dict["url"] : nil
+            let title    = dict["title"]?.isEmpty == false ? dict["title"] : nil
+
+            let debugText = [
+                "Failure: \(reason)",
+                types.isEmpty   ? nil : "Types detected: \(types)",
+                url.map        { "URL: \($0)" },
+                title.map      { "Title attempted: \($0)" },
+                "Time: \(date.formatted())"
+            ].compactMap { $0 }.joined(separator: "\n")
+
+            return Memory(
+                id: id,
+                sourceType: .sharedText,
+                photoAssetIdentifier: nil,
+                localThumbnailPath: nil,
+                createdAt: date,
+                importedAt: date,
+                title: "Share Failed — \(reason)",
+                ocrText: debugText,
+                ocrStatus: .failed,
+                searchText: debugText.lowercased(),
+                originalExists: false,
+                deletedOriginalAt: nil,
+                sourceURL: url,
+                embedding: nil,
+                embeddingStatus: .notStarted
+            )
+        }
+    }
+
+    func clearDebugEntry(id: UUID) {
+        let defaults = UserDefaults(suiteName: "group.com.recallthat.app")
+        var entries = (defaults?.array(forKey: "shareDebugEntries") as? [[String: String]]) ?? []
+        entries.removeAll { $0["id"] == id.uuidString }
+        defaults?.set(entries, forKey: "shareDebugEntries")
+        debugEntries.removeAll { $0.id == id }
+    }
+
     // MARK: - Temporal grouping
 
     var groupedMemories: [(label: String, memories: [Memory])] {
+        var groups: [(label: String, memories: [Memory])] = []
+
+        // Failed share debug entries always surfaced at the top
+        if !debugEntries.isEmpty {
+            groups.append((label: "Share Failures", memories: debugEntries))
+        }
+
         let now = Date()
         let calendar = Calendar.current
         let sevenDaysAgo = calendar.date(byAdding: .day, value: -7, to: now)!
@@ -42,7 +107,6 @@ final class HomeViewModel {
             }
         }
 
-        var groups: [(label: String, memories: [Memory])] = []
         if !last7.isEmpty { groups.append((label: "Last 7 Days", memories: last7)) }
         if !prev2Weeks.isEmpty { groups.append((label: "Previous 2 Weeks", memories: prev2Weeks)) }
         for year in byYear.keys.sorted(by: >) {
@@ -61,12 +125,14 @@ final class HomeViewModel {
         } catch {
             errorMessage = "Could not load memories."
         }
+        loadDebugEntries()
         isLoading = false
     }
 
     /// Refresh the list silently — no loading spinner, used for background version bumps.
     func loadQuietly(from repository: any MemoryRepository) async {
         memories = (try? await repository.fetchAll()) ?? memories
+        loadDebugEntries()
     }
 
     func requestPhotoAccess(using service: any PhotoLibraryServiceProtocol) async {

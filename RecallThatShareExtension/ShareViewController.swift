@@ -20,6 +20,11 @@ final class ShareViewController: UIViewController {
 
     private let shareState = ShareState()
 
+    // Debug tracking — populated during processSharedContent, used by fail()
+    private var lastDetectedTypes: [String] = []
+    private var lastAttemptedURL: String? = nil
+    private var lastAttemptedTitle: String? = nil
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
@@ -47,40 +52,40 @@ final class ShareViewController: UIViewController {
 
     // MARK: - Dispatch by content type
 
-    // Word/Excel/Presentation UTIs
     private static let wordUTIs = [
-        "org.openxmlformats.wordprocessingml.document",  // .docx
-        "com.microsoft.word.doc",                         // .doc
-        "com.apple.iwork.pages.sffpages",                 // Pages
+        "org.openxmlformats.wordprocessingml.document",
+        "com.microsoft.word.doc",
+        "com.apple.iwork.pages.sffpages",
     ]
     private static let spreadsheetUTIs = [
-        "org.openxmlformats.spreadsheetml.sheet",         // .xlsx
-        "com.microsoft.excel.xls",                        // .xls
-        "com.apple.iwork.numbers.sffnumbers",             // Numbers
+        "org.openxmlformats.spreadsheetml.sheet",
+        "com.microsoft.excel.xls",
+        "com.apple.iwork.numbers.sffnumbers",
     ]
     private static let presentationUTIs = [
-        "org.openxmlformats.presentationml.presentation", // .pptx
-        "com.microsoft.powerpoint.ppt",                   // .ppt
-        "com.apple.iwork.keynote.sffkey",                 // Keynote
+        "org.openxmlformats.presentationml.presentation",
+        "com.microsoft.powerpoint.ppt",
+        "com.apple.iwork.keynote.sffkey",
     ]
 
     private func processSharedContent() async {
         guard let items = extensionContext?.inputItems as? [NSExtensionItem] else {
-            fail(); return
+            fail(reason: "No input items from extensionContext"); return
         }
 
-        // Scan ALL attachments across all items before deciding how to handle.
-        // Social apps (Instagram, Facebook) send image + URL together; URL must win.
+        // Collect every type identifier present — used for debug entries
+        var allTypes: [String] = []
         var urlProvider: NSItemProvider? = nil
         var imageProvider: NSItemProvider? = nil
         var pdfProvider: NSItemProvider? = nil
         var videoProvider: NSItemProvider? = nil
         var audioProvider: NSItemProvider? = nil
         var textProvider: NSItemProvider? = nil
-        var docProvider: (NSItemProvider, String, String)? = nil  // (provider, typeID, label)
+        var docProvider: (NSItemProvider, String, String)? = nil
 
         for item in items {
             for attachment in item.attachments ?? [] {
+                allTypes.append(contentsOf: attachment.registeredTypeIdentifiers)
                 if urlProvider == nil && attachment.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
                     urlProvider = attachment
                 }
@@ -113,17 +118,20 @@ final class ShareViewController: UIViewController {
             }
         }
 
+        // Store for debug reporting
+        lastDetectedTypes = Array(Set(allTypes)).sorted()
+
         // If a text provider looks like a URL, promote it to URL handling
         if urlProvider == nil, let tp = textProvider {
             if let raw = try? await tp.loadItem(forTypeIdentifier: UTType.plainText.identifier),
-               let str = raw as? String,
+               let str = (raw as? String) ?? (raw as? NSString as String?),
                let url = URL(string: str.trimmingCharacters(in: .whitespacesAndNewlines)),
                url.scheme?.hasPrefix("http") == true {
                 await handleURLDirectly(url); return
             }
         }
 
-        // Priority: URL > PDF > video > audio > image > text > document > data
+        // Priority: URL > PDF > video > audio > image > text > document
         if let p = urlProvider                   { await handleURL(p); return }
         if let p = pdfProvider                   { await handleFile(p, sourceType: .sharedPDF, label: "PDF"); return }
         if let p = videoProvider                 { await handleFile(p, sourceType: .sharedVideo, label: "Video"); return }
@@ -132,19 +140,21 @@ final class ShareViewController: UIViewController {
         if let p = textProvider                  { await handleText(p); return }
         if let (p, uti, label) = docProvider     { await handleDocument(p, typeID: uti, label: label); return }
 
-        // Generic data fallback
         for item in items {
             for attachment in item.attachments ?? [] where attachment.hasItemConformingToTypeIdentifier(UTType.data.identifier) {
                 await handleDocument(attachment, typeID: UTType.data.identifier, label: "File"); return
             }
         }
-        fail()
+        fail(reason: "No recognized content type in: \(lastDetectedTypes.joined(separator: ", "))")
     }
 
-    // Handles a URL value already resolved to a URL struct (from text-promoted-to-URL path)
+    // MARK: - URL directly (from text-promoted-to-URL path)
+
     private func handleURLDirectly(_ url: URL) async {
+        lastAttemptedURL = url.absoluteString
         let meta = await fetchMetadata(for: url)
         let title = meta.title ?? url.host ?? url.absoluteString
+        lastAttemptedTitle = title
         let text = [title, meta.description].compactMap { $0 }.joined(separator: "\n")
         let id = UUID()
         var thumbPath: String? = nil
@@ -156,7 +166,7 @@ final class ShareViewController: UIViewController {
                                   ocrText: text, thumbnailPath: thumbPath, sourceURL: url.absoluteString))
             succeed()
         } catch {
-            fail()
+            fail(reason: "Save failed: \(error.localizedDescription)")
         }
     }
 
@@ -171,12 +181,13 @@ final class ShareViewController: UIViewController {
                 if let data = raw as? Data     { return UIImage(data: data) }
                 return nil
             }()
-            guard let image else { fail(); return }
+            guard let image else { fail(reason: "Image provider returned unrecognised type: \(type(of: raw))"); return }
 
             let text = (try? await recognizeText(in: image)) ?? ""
             let firstLine = text.components(separatedBy: "\n")
                 .first { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
             let title = firstLine ?? "Shared Image"
+            lastAttemptedTitle = title
             let id = UUID()
 
             try save(MemoryPayload(
@@ -189,7 +200,7 @@ final class ShareViewController: UIViewController {
             ))
             succeed()
         } catch {
-            fail()
+            fail(reason: "Image handler: \(error.localizedDescription)")
         }
     }
 
@@ -198,10 +209,23 @@ final class ShareViewController: UIViewController {
     private func handleURL(_ provider: NSItemProvider) async {
         do {
             let raw = try await provider.loadItem(forTypeIdentifier: UTType.url.identifier)
-            guard let url = raw as? URL else { fail(); return }
 
+            // Accept both URL and String (some apps return NSString for URL items)
+            let url: URL? = {
+                if let u = raw as? URL { return u }
+                if let s = (raw as? String) ?? (raw as? NSString as String?),
+                   let u = URL(string: s.trimmingCharacters(in: .whitespacesAndNewlines)) { return u }
+                return nil
+            }()
+            guard let url, url.scheme?.hasPrefix("http") == true else {
+                fail(reason: "URL provider returned non-http value: \(raw ?? "nil")")
+                return
+            }
+
+            lastAttemptedURL = url.absoluteString
             let meta = await fetchMetadata(for: url)
             let title = meta.title ?? url.host ?? url.absoluteString
+            lastAttemptedTitle = title
             let text = [title, meta.description].compactMap { $0 }.joined(separator: "\n")
             let id = UUID()
             var thumbPath: String? = nil
@@ -219,7 +243,7 @@ final class ShareViewController: UIViewController {
             ))
             succeed()
         } catch {
-            fail()
+            fail(reason: "URL handler: \(error.localizedDescription)")
         }
     }
 
@@ -228,11 +252,14 @@ final class ShareViewController: UIViewController {
     private func handleText(_ provider: NSItemProvider) async {
         do {
             let raw = try await provider.loadItem(forTypeIdentifier: UTType.plainText.identifier)
-            guard let text = raw as? String, !text.isEmpty else { fail(); return }
+            guard let text = (raw as? String) ?? (raw as? NSString as String?), !text.isEmpty else {
+                fail(reason: "Text provider returned empty or non-string: \(type(of: raw))"); return
+            }
 
             let firstLine = text.components(separatedBy: "\n")
                 .first { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
             let title = String((firstLine ?? text).prefix(80))
+            lastAttemptedTitle = title
             let id = UUID()
 
             try save(MemoryPayload(
@@ -245,7 +272,7 @@ final class ShareViewController: UIViewController {
             ))
             succeed()
         } catch {
-            fail()
+            fail(reason: "Text handler: \(error.localizedDescription)")
         }
     }
 
@@ -266,6 +293,7 @@ final class ShareViewController: UIViewController {
             let fileURL: URL? = raw as? URL
             let filename = fileURL?.deletingPathExtension().lastPathComponent
             let title = filename?.isEmpty == false ? filename! : "Shared \(label)"
+            lastAttemptedTitle = title
             let id = UUID()
             var ocrText = ""
             var thumbPath: String? = nil
@@ -290,7 +318,7 @@ final class ShareViewController: UIViewController {
             ))
             succeed()
         } catch {
-            fail()
+            fail(reason: "\(label) handler: \(error.localizedDescription)")
         }
     }
 
@@ -302,13 +330,12 @@ final class ShareViewController: UIViewController {
             let fileURL = raw as? URL
             let filename = fileURL?.lastPathComponent ?? label
             let title = filename.isEmpty ? label : filename
+            lastAttemptedTitle = title
             var ocrText = ""
 
-            // Best-effort text extraction: try reading as UTF-8 / Latin-1 plain text
             if let url = fileURL, let data = try? Data(contentsOf: url) {
                 let candidate = String(data: data, encoding: .utf8)
                     ?? String(data: data, encoding: .isoLatin1)
-                // Heuristic: if it looks like readable text (>50% printable ASCII), keep it
                 if let s = candidate {
                     let printable = s.unicodeScalars.filter { $0.value > 31 && $0.value < 127 }.count
                     if Double(printable) / Double(max(s.count, 1)) > 0.5 {
@@ -329,7 +356,7 @@ final class ShareViewController: UIViewController {
             ))
             succeed()
         } catch {
-            fail()
+            fail(reason: "Document handler: \(error.localizedDescription)")
         }
     }
 
@@ -361,7 +388,13 @@ final class ShareViewController: UIViewController {
         if let videoID = youTubeVideoID(from: url) {
             return await youTubeMetadata(videoID: videoID)
         }
-        guard let (data, _) = try? await URLSession.shared.data(from: url),
+        // Timeout after 5 s to avoid stalling the extension
+        let session = URLSession(configuration: {
+            let c = URLSessionConfiguration.default
+            c.timeoutIntervalForRequest = 5
+            return c
+        }())
+        guard let (data, _) = try? await session.data(from: url),
               let html = String(data: data, encoding: .utf8)
                       ?? String(data: data, encoding: .isoLatin1) else {
             return PageMetadata(title: url.host, description: nil, imageURL: nil)
@@ -477,7 +510,10 @@ final class ShareViewController: UIViewController {
         let sourceURL: String?
     }
 
-    private enum SaveError: Error { case noGroupContainer }
+    private enum SaveError: Error {
+        case noGroupContainer
+        case swiftDataError(String)
+    }
 
     private func save(_ payload: MemoryPayload) throws {
         guard let groupURL = FileManager.default.containerURL(
@@ -486,33 +522,55 @@ final class ShareViewController: UIViewController {
 
         let storeURL = groupURL.appendingPathComponent("recallthat.sqlite")
         let config = ModelConfiguration(url: storeURL)
-        let container = try ModelContainer(for: MemoryItem.self, configurations: config)
-        let context = ModelContext(container)
+        do {
+            let container = try ModelContainer(for: MemoryItem.self, configurations: config)
+            let context = ModelContext(container)
 
-        let searchText = (payload.title + " " + payload.ocrText).lowercased()
-        let item = MemoryItem(
-            id: payload.id,
-            sourceTypeRaw: payload.sourceType.rawValue,
-            photoAssetIdentifier: nil,
-            localThumbnailPath: payload.thumbnailPath,
-            createdAt: Date(),
-            importedAt: Date(),
-            title: payload.title,
-            ocrText: payload.ocrText,
-            ocrStatusRaw: OCRStatus.complete.rawValue,
-            searchText: searchText,
-            originalExists: false,
-            deletedOriginalAt: nil,
-            sourceURL: payload.sourceURL
-        )
-        context.insert(item)
-        try context.save()
+            let searchText = (payload.title + " " + payload.ocrText).lowercased()
+            let item = MemoryItem(
+                id: payload.id,
+                sourceTypeRaw: payload.sourceType.rawValue,
+                photoAssetIdentifier: nil,
+                localThumbnailPath: payload.thumbnailPath,
+                createdAt: Date(),
+                importedAt: Date(),
+                title: payload.title,
+                ocrText: payload.ocrText,
+                ocrStatusRaw: OCRStatus.complete.rawValue,
+                searchText: searchText,
+                originalExists: false,
+                deletedOriginalAt: nil,
+                sourceURL: payload.sourceURL
+            )
+            context.insert(item)
+            try context.save()
+        } catch {
+            throw SaveError.swiftDataError(error.localizedDescription)
+        }
+    }
+
+    // MARK: - Debug entry
+
+    /// Writes failure info to the shared UserDefaults so the main app can surface it as a list item.
+    private func saveDebugEntry(reason: String) {
+        let defaults = UserDefaults(suiteName: "group.com.recallthat.app")
+        var entries = (defaults?.array(forKey: "shareDebugEntries") as? [[String: String]]) ?? []
+        let entry: [String: String] = [
+            "id":    UUID().uuidString,
+            "ts":    "\(Date().timeIntervalSince1970)",
+            "why":   reason,
+            "types": lastDetectedTypes.joined(separator: ", "),
+            "url":   lastAttemptedURL ?? "",
+            "title": lastAttemptedTitle ?? ""
+        ]
+        entries.insert(entry, at: 0)
+        entries = Array(entries.prefix(20))          // keep last 20 failures
+        defaults?.set(entries, forKey: "shareDebugEntries")
     }
 
     // MARK: - State transitions
 
     private func succeed() {
-        // Signal main app to refresh (belt-and-suspenders alongside NSPersistentStoreRemoteChange)
         UserDefaults(suiteName: "group.com.recallthat.app")?.set(Date().timeIntervalSince1970, forKey: "lastShareSave")
         shareState.phase = .saved
         Task {
@@ -521,7 +579,10 @@ final class ShareViewController: UIViewController {
         }
     }
 
-    private func fail() {
+    private func fail(reason: String = "Unknown error") {
+        saveDebugEntry(reason: reason)
+        // Signal the main app so it picks up the debug entry immediately
+        UserDefaults(suiteName: "group.com.recallthat.app")?.set(Date().timeIntervalSince1970, forKey: "lastShareSave")
         shareState.phase = .failed
     }
 }
@@ -536,8 +597,11 @@ private struct ShareExtensionView: View {
         VStack(spacing: 0) {
             HStack {
                 HStack(spacing: 8) {
-                    Image(systemName: "brain.head.profile")
-                        .foregroundStyle(.blue)
+                    Image("AppLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 26, height: 26)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
                     Text("RecallThat")
                         .font(.headline)
                 }
@@ -572,8 +636,10 @@ private struct ShareExtensionView: View {
                         .foregroundStyle(.red)
                     Text("Could not save")
                         .font(.headline)
-                    Text("Please try again.")
+                    Text("A debug entry was saved in RecallThat.")
+                        .font(.subheadline)
                         .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
                     Button("Dismiss", action: onCancel)
                         .padding(.top, 8)
                 }

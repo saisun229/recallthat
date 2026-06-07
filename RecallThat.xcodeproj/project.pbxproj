@@ -60,6 +60,7 @@
 		AA000037000000000000001A /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000037000000000000001B /* ChatViewModel.swift */; };
 		AA000038000000000000001A /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000038000000000000001B /* ChatView.swift */; };
 		BB00002A000000000000001A /* EmbeddingStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002A000000000000001B /* EmbeddingStatus.swift */; };
+		BB00002B000000000000001A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000029000000000000001B /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -442,6 +443,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BB00002B000000000000001A /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

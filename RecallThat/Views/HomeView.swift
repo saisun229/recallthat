@@ -140,11 +140,12 @@ struct HomeView: View {
     private var memoriesList: some View {
         List {
             ForEach(viewModel.groupedMemories, id: \.label) { group in
+                let isDebugSection = group.label == "Share Failures"
                 // Section label as a plain row — scrolls with content, never floats
                 Text(group.label)
                     .font(.footnote)
                     .fontWeight(.semibold)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(isDebugSection ? AnyShapeStyle(.orange) : AnyShapeStyle(.secondary))
                     .textCase(.uppercase)
                     .tracking(0.5)
                     .listRowBackground(Color(.systemGroupedBackground))
@@ -167,7 +168,9 @@ struct HomeView: View {
 
     @ViewBuilder
     private func memoryRow(for memory: Memory) -> some View {
-        if viewModel.isSelecting {
+        let isDebug = viewModel.debugEntryIDs.contains(memory.id)
+
+        if viewModel.isSelecting && !isDebug {
             Button {
                 viewModel.toggleSelection(memory.id)
             } label: {
@@ -182,19 +185,31 @@ struct HomeView: View {
             NavigationLink(destination: MemoryDetailView(memory: memory)) {
                 MemoryCardView(memory: memory)
             }
-            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                if memory.originalExists && memory.sourceType == .screenshot {
-                    Button {
-                        safeDeleteTarget = memory
+            .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                if isDebug {
+                    Button(role: .destructive) {
+                        viewModel.clearDebugEntry(id: memory.id)
                     } label: {
-                        Label("Safe\nDelete", systemImage: "trash")
+                        Label("Dismiss", systemImage: "xmark.circle")
                     }
-                    .tint(.green)
+                    .tint(.orange)
                 }
-                Button(role: .destructive) {
-                    hardDeleteTarget = memory
-                } label: {
-                    Label("Full\nDelete", systemImage: "trash.fill")
+            }
+            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                if !isDebug {
+                    if memory.originalExists && memory.sourceType == .screenshot {
+                        Button {
+                            safeDeleteTarget = memory
+                        } label: {
+                            Label("Safe\nDelete", systemImage: "trash")
+                        }
+                        .tint(.green)
+                    }
+                    Button(role: .destructive) {
+                        hardDeleteTarget = memory
+                    } label: {
+                        Label("Full\nDelete", systemImage: "trash.fill")
+                    }
                 }
             }
         }

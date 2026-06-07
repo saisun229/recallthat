@@ -15,7 +15,7 @@ struct ChatView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Text("\(ChatQueryCounter.queriesRemaining)/30 left")
+                    Text("\(ChatQueryCounter.queriesRemaining)/3 today")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

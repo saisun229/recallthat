@@ -14,7 +14,7 @@ final class ChatViewModel {
         guard !text.isEmpty, !isResponding else { return }
 
         guard ChatQueryCounter.hasQueriesRemaining else {
-            limitError = "You've used all 30 AI queries for this month. Resets on the 1st."
+            limitError = "You've used today's 3 AI queries. Resets tomorrow."
             return
         }
 

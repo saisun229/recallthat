@@ -1,27 +1,27 @@
 import Foundation
 
 enum ChatQueryCounter {
-    static let limitPerMonth = 30
+    static let limitPerDay = 3
 
-    private static var monthKey: String {
+    private static var dayKey: String {
         let f = DateFormatter()
-        f.dateFormat = "yyyy-MM"
+        f.dateFormat = "yyyy-MM-dd"
         return "chatQueries_\(f.string(from: Date()))"
     }
 
     static var queriesUsed: Int {
-        UserDefaults.standard.integer(forKey: monthKey)
+        UserDefaults.standard.integer(forKey: dayKey)
     }
 
     static var queriesRemaining: Int {
-        max(0, limitPerMonth - queriesUsed)
+        max(0, limitPerDay - queriesUsed)
     }
 
     static var hasQueriesRemaining: Bool {
-        queriesUsed < limitPerMonth
+        queriesUsed < limitPerDay
     }
 
     static func recordQuery() {
-        UserDefaults.standard.set(queriesUsed + 1, forKey: monthKey)
+        UserDefaults.standard.set(queriesUsed + 1, forKey: dayKey)
     }
 }
