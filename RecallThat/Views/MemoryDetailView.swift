@@ -1,9 +1,10 @@
 import SwiftUI
+import UIKit
 
 struct MemoryDetailView: View {
     let memory: Memory
     @State private var viewModel: MemoryDetailViewModel
-    @State private var isTextExpanded = true
+    @State private var isTextExpanded = false
     @Environment(AppEnvironment.self) private var appEnv
 
     init(memory: Memory) {
@@ -14,6 +15,7 @@ struct MemoryDetailView: View {
     var body: some View {
         List {
             thumbnailSection
+            openSourceSection
             infoSection
             ocrTextSection
             deleteSection
@@ -58,7 +60,62 @@ struct MemoryDetailView: View {
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
             }
+        } else if let path = viewModel.memory.localThumbnailPath,
+                  let uiImage = UIImage(contentsOfFile: path) {
+            Section {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 200)
+                    .clipped()
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+            }
         }
+    }
+
+    // MARK: - Open source section (URL memories only)
+
+    @ViewBuilder
+    private var openSourceSection: some View {
+        if viewModel.memory.sourceType == .sharedURL,
+           let urlStr = viewModel.memory.sourceURL,
+           let url = URL(string: urlStr) {
+            let source = URLSourceType.detect(from: urlStr)
+            Section {
+                Link(destination: url) {
+                    HStack(spacing: 14) {
+                        Image(systemName: source.systemIcon)
+                            .font(.title2)
+                            .foregroundStyle(.white)
+                            .frame(width: 44, height: 44)
+                            .background(source.accentColor, in: RoundedRectangle(cornerRadius: 10))
+
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(source.openLabel)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(source.accentColor)
+                            Text(hostDisplay(urlStr))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+
+                        Spacer()
+
+                        Image(systemName: "arrow.up.right.square.fill")
+                            .foregroundStyle(source.accentColor.opacity(0.6))
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+        }
+    }
+
+    private func hostDisplay(_ urlStr: String) -> String {
+        guard let host = URL(string: urlStr)?.host else { return urlStr }
+        return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
     }
 
     // MARK: - Info section

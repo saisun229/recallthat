@@ -10,6 +10,7 @@ final class AppEnvironment {
     let photoImportService: PhotoImportService
     let ocrPipelineService: OCRPipelineService
     let searchService: any SearchServiceProtocol
+    let embeddingPipelineService: EmbeddingPipelineService
 
     /// Incremented whenever memories are bulk-modified (e.g. Delete All in Settings)
     /// so views that hold their own copy can react and re-fetch.
@@ -20,12 +21,14 @@ final class AppEnvironment {
         photoLibraryService: any PhotoLibraryServiceProtocol,
         photoImportService: PhotoImportService,
         ocrPipelineService: OCRPipelineService,
-        searchService: any SearchServiceProtocol
+        searchService: any SearchServiceProtocol,
+        embeddingPipelineService: EmbeddingPipelineService
     ) {
         self.memoryRepository = repository
         self.photoLibraryService = photoLibraryService
         self.photoImportService = photoImportService
         self.ocrPipelineService = ocrPipelineService
         self.searchService = searchService
+        self.embeddingPipelineService = embeddingPipelineService
     }
 }

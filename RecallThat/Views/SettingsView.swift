@@ -44,6 +44,27 @@ struct SettingsView: View {
                     }
                 }
 
+                Section {
+                    HStack {
+                        Label("Semantic Search", systemImage: "sparkles")
+                        Spacer()
+                        Text("On")
+                            .foregroundStyle(.green)
+                            .fontWeight(.medium)
+                    }
+                    HStack {
+                        Label("AI Answers", systemImage: "brain")
+                        Spacer()
+                        Text("On")
+                            .foregroundStyle(.green)
+                            .fontWeight(.medium)
+                    }
+                } header: {
+                    Text("AI Search")
+                } footer: {
+                    Text("Semantic search and AI-powered answers are included. Everything runs via on-device keyword search first; AI enhancements apply automatically.")
+                }
+
                 Section("Data Management") {
                     Button("Delete All Memories", role: .destructive) {
                         showDeleteAllConfirmation = true

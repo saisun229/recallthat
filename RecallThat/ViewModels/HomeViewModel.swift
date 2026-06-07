@@ -19,6 +19,40 @@ final class HomeViewModel {
         var description: String { "Indexing \(completed) of \(total)…" }
     }
 
+    // MARK: - Temporal grouping
+
+    var groupedMemories: [(label: String, memories: [Memory])] {
+        let now = Date()
+        let calendar = Calendar.current
+        let sevenDaysAgo = calendar.date(byAdding: .day, value: -7, to: now)!
+        let twentyOneDaysAgo = calendar.date(byAdding: .day, value: -21, to: now)!
+
+        var last7: [Memory] = []
+        var prev2Weeks: [Memory] = []
+        var byYear: [Int: [Memory]] = [:]
+
+        for memory in memories {
+            if memory.createdAt >= sevenDaysAgo {
+                last7.append(memory)
+            } else if memory.createdAt >= twentyOneDaysAgo {
+                prev2Weeks.append(memory)
+            } else {
+                let year = calendar.component(.year, from: memory.createdAt)
+                byYear[year, default: []].append(memory)
+            }
+        }
+
+        var groups: [(label: String, memories: [Memory])] = []
+        if !last7.isEmpty { groups.append((label: "Last 7 Days", memories: last7)) }
+        if !prev2Weeks.isEmpty { groups.append((label: "Previous 2 Weeks", memories: prev2Weeks)) }
+        for year in byYear.keys.sorted(by: >) {
+            if let g = byYear[year], !g.isEmpty {
+                groups.append((label: "\(year)", memories: g))
+            }
+        }
+        return groups
+    }
+
     func load(from repository: any MemoryRepository) async {
         isLoading = true
         errorMessage = nil

@@ -37,7 +37,9 @@ final class SwiftDataMemoryRepository: MemoryRepository {
             searchText: memory.searchText,
             originalExists: memory.originalExists,
             deletedOriginalAt: memory.deletedOriginalAt,
-            sourceURL: memory.sourceURL
+            sourceURL: memory.sourceURL,
+            embeddingStatusRaw: memory.embeddingStatus.rawValue,
+            embeddingData: memory.embedding.map(MemoryItem.floatsToData)
         )
         context.insert(item)
         try context.save()
@@ -57,6 +59,8 @@ final class SwiftDataMemoryRepository: MemoryRepository {
         item.deletedOriginalAt = memory.deletedOriginalAt
         item.localThumbnailPath = memory.localThumbnailPath
         item.sourceURL = memory.sourceURL
+        item.embeddingStatusRaw = memory.embeddingStatus.rawValue
+        item.embeddingData = memory.embedding.map(MemoryItem.floatsToData)
         try context.save()
     }
 

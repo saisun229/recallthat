@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct SearchView: View {
     @Environment(AppEnvironment.self) private var appEnv
@@ -13,12 +14,43 @@ struct SearchView: View {
                         systemImage: "text.magnifyingglass",
                         description: Text("Type any text you remember seeing in a screenshot.")
                     )
-                } else if viewModel.results.isEmpty {
+                } else if !viewModel.isSearching && viewModel.results.isEmpty {
                     ContentUnavailableView.search(text: viewModel.query)
                 } else {
-                    List(viewModel.results) { memory in
-                        NavigationLink(destination: MemoryDetailView(memory: memory)) {
-                            MemoryCardView(memory: memory)
+                    List {
+                        if viewModel.isAnswering {
+                            Section {
+                                HStack(spacing: 10) {
+                                    ProgressView()
+                                    Text("Thinking…")
+                                        .foregroundStyle(.secondary)
+                                        .font(.subheadline)
+                                }
+                                .padding(.vertical, 4)
+                            } header: {
+                                Label("AI Answer", systemImage: "sparkles")
+                            }
+                        } else if let answer = viewModel.aiAnswer {
+                            Section {
+                                Text(answer)
+                                    .font(.subheadline)
+                                    .padding(.vertical, 4)
+                                    .textSelection(.enabled)
+                            } header: {
+                                Label("AI Answer", systemImage: "sparkles")
+                            }
+                        }
+
+                        if !viewModel.results.isEmpty {
+                            if viewModel.aiAnswer != nil || viewModel.isAnswering {
+                                Section("Sources") {
+                                    ForEach(viewModel.results) { resultRow(for: $0) }
+                                }
+                            } else {
+                                Section {
+                                    ForEach(viewModel.results) { resultRow(for: $0) }
+                                }
+                            }
                         }
                     }
                     .listStyle(.plain)
@@ -29,12 +61,44 @@ struct SearchView: View {
             .onChange(of: viewModel.query) { _, _ in
                 viewModel.search(using: appEnv.searchService)
             }
+            .toolbar {
+                if viewModel.isSearching {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        ProgressView()
+                    }
+                }
+            }
         }
         .task {
             await viewModel.loadMemories(from: appEnv.memoryRepository)
         }
         .onAppear {
             Task { await viewModel.loadMemories(from: appEnv.memoryRepository) }
+        }
+        .onChange(of: appEnv.memoriesVersion) { _, _ in
+            Task { await viewModel.loadMemories(from: appEnv.memoryRepository) }
+        }
+    }
+
+    // MARK: - Result row
+
+    @ViewBuilder
+    private func resultRow(for memory: Memory) -> some View {
+        NavigationLink(destination: MemoryDetailView(memory: memory)) {
+            MemoryCardView(memory: memory)
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            if memory.sourceType == .sharedURL,
+               let urlStr = memory.sourceURL,
+               let url = URL(string: urlStr) {
+                let source = URLSourceType.detect(from: urlStr)
+                Button {
+                    UIApplication.shared.open(url)
+                } label: {
+                    Label(source.displayName, systemImage: source.systemIcon)
+                }
+                .tint(source.accentColor)
+            }
         }
     }
 }

@@ -37,4 +37,10 @@ struct Memory: Identifiable, Equatable {
 
     /// Original URL for sharedURL memories (nil for screenshot/sharedImage/sharedText)
     var sourceURL: String?
+
+    /// OpenAI dense embedding vector (1536 floats for text-embedding-3-small); nil until indexed
+    var embedding: [Float]? = nil
+
+    /// Tracks which stage of the embedding pipeline this memory is in
+    var embeddingStatus: EmbeddingStatus = .notStarted
 }

@@ -76,22 +76,26 @@ struct MemoryCardView: View {
     private var sourceTypeBadge: some View {
         switch memory.sourceType {
         case .screenshot, .sharedImage: EmptyView()
-        case .sharedURL:   SourceBadge(systemImage: "link",       color: .blue)
-        case .sharedText:  SourceBadge(systemImage: "text.quote", color: .purple)
-        case .sharedPDF:   SourceBadge(systemImage: "doc.fill",   color: .red)
-        case .sharedVideo: SourceBadge(systemImage: "play.fill",  color: .indigo)
-        case .sharedAudio: SourceBadge(systemImage: "waveform",   color: .teal)
+        case .sharedURL:
+            let src = URLSourceType.detect(from: memory.sourceURL)
+            SourceBadge(systemImage: src.systemIcon, color: src.accentColor)
+        case .sharedText:  SourceBadge(systemImage: "text.quote",       color: .purple)
+        case .sharedPDF:   SourceBadge(systemImage: "doc.fill",         color: .red)
+        case .sharedVideo: SourceBadge(systemImage: "play.fill",        color: .indigo)
+        case .sharedAudio: SourceBadge(systemImage: "waveform",         color: .teal)
+        case .sharedFile:  SourceBadge(systemImage: "doc.badge.plus",   color: .orange)
         }
     }
 
     private var placeholderIcon: String {
         switch memory.sourceType {
         case .screenshot, .sharedImage: return "photo"
-        case .sharedURL:                return "link"
+        case .sharedURL:                return URLSourceType.detect(from: memory.sourceURL).systemIcon
         case .sharedText:               return "text.quote"
         case .sharedPDF:                return "doc.richtext"
         case .sharedVideo:              return "video"
         case .sharedAudio:              return "waveform"
+        case .sharedFile:               return "doc.badge.plus"
         }
     }
 

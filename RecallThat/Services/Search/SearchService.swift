@@ -4,7 +4,6 @@ import Foundation
 /// Implemented in Phase 5. Stub only in Phase 0.
 @MainActor
 protocol SearchServiceProtocol {
-    /// Search memories by keyword. Case-insensitive, partial/contains matching.
-    /// Searches the Memory.searchText field (denormalized title + ocrText).
-    func search(query: String, in memories: [Memory]) -> [Memory]
+    /// Search memories by keyword (and optionally semantic embedding). Case-insensitive partial match.
+    func search(query: String, in memories: [Memory]) async -> [Memory]
 }

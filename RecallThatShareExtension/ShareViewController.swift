@@ -47,6 +47,23 @@ final class ShareViewController: UIViewController {
 
     // MARK: - Dispatch by content type
 
+    // Word/Excel/Presentation UTIs
+    private static let wordUTIs = [
+        "org.openxmlformats.wordprocessingml.document",  // .docx
+        "com.microsoft.word.doc",                         // .doc
+        "com.apple.iwork.pages.sffpages",                 // Pages
+    ]
+    private static let spreadsheetUTIs = [
+        "org.openxmlformats.spreadsheetml.sheet",         // .xlsx
+        "com.microsoft.excel.xls",                        // .xls
+        "com.apple.iwork.numbers.sffnumbers",             // Numbers
+    ]
+    private static let presentationUTIs = [
+        "org.openxmlformats.presentationml.presentation", // .pptx
+        "com.microsoft.powerpoint.ppt",                   // .ppt
+        "com.apple.iwork.keynote.sffkey",                 // Keynote
+    ]
+
     private func processSharedContent() async {
         guard let items = extensionContext?.inputItems as? [NSExtensionItem] else {
             fail(); return
@@ -70,6 +87,18 @@ final class ShareViewController: UIViewController {
                 }
                 if attachment.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
                     await handleText(attachment); return
+                }
+                for uti in Self.wordUTIs where attachment.hasItemConformingToTypeIdentifier(uti) {
+                    await handleDocument(attachment, typeID: uti, label: "Document"); return
+                }
+                for uti in Self.spreadsheetUTIs where attachment.hasItemConformingToTypeIdentifier(uti) {
+                    await handleDocument(attachment, typeID: uti, label: "Spreadsheet"); return
+                }
+                for uti in Self.presentationUTIs where attachment.hasItemConformingToTypeIdentifier(uti) {
+                    await handleDocument(attachment, typeID: uti, label: "Presentation"); return
+                }
+                if attachment.hasItemConformingToTypeIdentifier(UTType.data.identifier) {
+                    await handleDocument(attachment, typeID: UTType.data.identifier, label: "File"); return
                 }
             }
         }
@@ -202,6 +231,45 @@ final class ShareViewController: UIViewController {
                 title: title,
                 ocrText: ocrText,
                 thumbnailPath: thumbPath,
+                sourceURL: fileURL?.absoluteString
+            ))
+            succeed()
+        } catch {
+            fail()
+        }
+    }
+
+    // MARK: - Document handler (Word, Excel, Keynote, generic files)
+
+    private func handleDocument(_ provider: NSItemProvider, typeID: String, label: String) async {
+        do {
+            let raw = try await provider.loadItem(forTypeIdentifier: typeID)
+            let fileURL = raw as? URL
+            let filename = fileURL?.lastPathComponent ?? label
+            let title = filename.isEmpty ? label : filename
+            var ocrText = ""
+
+            // Best-effort text extraction: try reading as UTF-8 / Latin-1 plain text
+            if let url = fileURL, let data = try? Data(contentsOf: url) {
+                let candidate = String(data: data, encoding: .utf8)
+                    ?? String(data: data, encoding: .isoLatin1)
+                // Heuristic: if it looks like readable text (>50% printable ASCII), keep it
+                if let s = candidate {
+                    let printable = s.unicodeScalars.filter { $0.value > 31 && $0.value < 127 }.count
+                    if Double(printable) / Double(max(s.count, 1)) > 0.5 {
+                        ocrText = String(s.prefix(8000))
+                    }
+                }
+            }
+            if ocrText.isEmpty { ocrText = "\(label): \(filename)" }
+
+            let id = UUID()
+            try save(MemoryPayload(
+                id: id,
+                sourceType: .sharedFile,
+                title: title,
+                ocrText: ocrText,
+                thumbnailPath: nil,
                 sourceURL: fileURL?.absoluteString
             ))
             succeed()
@@ -389,6 +457,8 @@ final class ShareViewController: UIViewController {
     // MARK: - State transitions
 
     private func succeed() {
+        // Signal main app to refresh (belt-and-suspenders alongside NSPersistentStoreRemoteChange)
+        UserDefaults(suiteName: "group.com.recallthat.app")?.set(Date().timeIntervalSince1970, forKey: "lastShareSave")
         shareState.phase = .saved
         Task {
             try? await Task.sleep(for: .seconds(1.2))

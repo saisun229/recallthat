@@ -3,7 +3,7 @@ import Foundation
 @MainActor
 final class DefaultSearchService: SearchServiceProtocol {
 
-    func search(query: String, in memories: [Memory]) -> [Memory] {
+    func search(query: String, in memories: [Memory]) async -> [Memory] {
         let trimmed = query.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return [] }
         let normalized = trimmed.lowercased()

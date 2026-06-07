@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import CoreData
 
 private let onboardingKey = "hasCompletedOnboarding"
 
@@ -10,6 +11,7 @@ struct AppRootView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var appEnvironment: AppEnvironment?
     @State private var showOnboarding: Bool = !UserDefaults.standard.bool(forKey: onboardingKey)
+    @State private var lastSeenShareSave: Double = 0
 
     var body: some View {
         ZStack {
@@ -27,6 +29,16 @@ struct AppRootView: View {
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active, let env = appEnvironment else { return }
             env.memoriesVersion += 1
+            let shareSaveTime = UserDefaults(suiteName: "group.com.recallthat.app")?.double(forKey: "lastShareSave") ?? 0
+            if shareSaveTime > lastSeenShareSave {
+                lastSeenShareSave = shareSaveTime
+                env.memoriesVersion += 1
+            }
+        }
+        // Pick up writes made by the Share Extension (cross-process CoreData change)
+        .onReceive(NotificationCenter.default.publisher(for: .NSPersistentStoreRemoteChange)) { _ in
+            guard let env = appEnvironment else { return }
+            env.memoriesVersion += 1
         }
         .onAppear {
             guard appEnvironment == nil else { return }
@@ -36,13 +48,15 @@ struct AppRootView: View {
             let importService = PhotoImportService(photoLibrary: photoService, repository: repo)
             let ocrService = DefaultOCRService()
             let ocrPipeline = OCRPipelineService(ocrService: ocrService, repository: repo)
-            let searchService = DefaultSearchService()
+            let searchService = HybridSearchService()
+            let embeddingPipeline = EmbeddingPipelineService(repository: repo)
             appEnvironment = AppEnvironment(
                 repository: repo,
                 photoLibraryService: photoService,
                 photoImportService: importService,
                 ocrPipelineService: ocrPipeline,
-                searchService: searchService
+                searchService: searchService,
+                embeddingPipelineService: embeddingPipeline
             )
         }
     }

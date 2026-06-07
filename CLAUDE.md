@@ -28,52 +28,58 @@ RecallThat/
   Services/
     Photos/          — PhotoKit isolation (PhotoLibraryService)
     OCR/             — Apple Vision isolation (OCRService)
-    Search/          — search logic (SearchService)
+    Search/          — keyword + hybrid semantic search
+    Embedding/       — OpenAI embedding service + pipeline
+    LLM/             — OpenAI GPT-4o-mini RAG response
     Thumbnailing/    — thumbnail generation (ThumbnailService)
   Persistence/       — MemoryRepository protocol + SwiftData impl
-  Utilities/         — shared helpers
+  Utilities/         — KeychainHelper, VectorMath, shared helpers
 ```
 
-## Key Constraints (non-negotiable in MVP)
+## Key Constraints (non-negotiable)
 
 - No cloud upload of screenshots or OCR text
 - No backend, no accounts, no sync
-- No OpenAI / Claude / Gemini API calls in MVP
 - No auto-deletion — user must explicitly confirm every delete
 - OCR must run on-device using Apple Vision only
 - Photos access must handle denied/limited states gracefully
 - UI must never block during OCR or indexing
+- OpenAI calls only when user provides their own API key (BYOK) — stored in Keychain, never leaves device
+- Graceful fallback to keyword-only search if API key is missing or OpenAI call fails
 
-## Build Phase Rules
+## Business Model
 
-Work one phase at a time. Each phase must compile before starting the next.
-Never add features outside the current phase scope.
-After each phase: list changed files, explain how to test, note known issues, stop for approval.
-Commit to GitHub at the end of each completed phase.
+**Free**: keyword search, local OCR, unlimited memories, share extension
+**Pro (BYOK)**: dense embeddings (semantic search), AI-powered search responses, reranker
+User provides their own OpenAI API key in Settings → stored in iOS Keychain → never sent to our servers.
+Estimated cost: < $0.03/month per active user.
 
 ## Current Phase
 
-Phase 0 — Project Grounding (foundation only, no Photos/OCR/search yet)
+Post-MVP AI & UX expansion (completed phases 1–8 of the v2 roadmap)
 
 ## Technology Choices
 
 - SwiftUI (not UIKit)
 - SwiftData for persistence (iOS 17+)
-- Apple Vision for OCR (VNRecognizeTextRequest) — Phase 4
-- PhotoKit for Photos access (PHPhotoLibrary) — Phase 3
+- Apple Vision for OCR (VNRecognizeTextRequest)
+- PhotoKit for Photos access (PHPhotoLibrary)
+- OpenAI `text-embedding-3-small` for dense embeddings (BYOK)
+- OpenAI `gpt-4o-mini` for RAG responses (BYOK)
+- Accelerate/vDSP for cosine similarity (on-device)
+- Reciprocal Rank Fusion for hybrid search merging
+- iOS Keychain for API key storage
 - async/await throughout
-- No third-party dependencies in MVP
+- No third-party dependencies
 
 ## Do Not Add (until explicitly requested)
 
-- OpenAI or any cloud AI API
 - Backend server or cloud sync
-- User accounts or subscriptions
-- Share extension
-- Background tasks / background app refresh
-- Embeddings or semantic search
+- User accounts or StoreKit subscriptions (use BYOK instead)
 - Analytics on screenshot content
 - Auto-delete behavior
+- Background app refresh / push notifications
+- OpenAI calls without user-supplied API key
 
 ## Git Workflow
 

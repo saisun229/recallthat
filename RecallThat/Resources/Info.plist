@@ -43,6 +43,10 @@
     <key>NSPhotoLibraryAddUsageDescription</key>
     <string>RecallThat needs this permission to delete the original screenshot from your Photos library when you choose Safe Delete.</string>
 
+    <!-- OpenAI API key — injected at build time via OPENAI_API_KEY Xcode Cloud env var; never committed to source -->
+    <key>OpenAIAPIKey</key>
+    <string>$(OPENAI_API_KEY)</string>
+
     <!-- Launch screen — SwiftUI handles it; empty dict is correct -->
     <key>UILaunchScreen</key>
     <dict/>

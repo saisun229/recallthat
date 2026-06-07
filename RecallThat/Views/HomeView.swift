@@ -25,7 +25,7 @@ struct HomeView: View {
                     authorizedContent
                 }
             }
-            .navigationTitle("RecallThat")
+            .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbarContent }
         }
@@ -138,38 +138,10 @@ struct HomeView: View {
 
     private var memoriesList: some View {
         List {
-            ForEach(viewModel.memories) { memory in
-                if viewModel.isSelecting {
-                    Button {
-                        viewModel.toggleSelection(memory.id)
-                    } label: {
-                        MemoryCardView(
-                            memory: memory,
-                            isSelecting: true,
-                            isSelected: viewModel.selectedIDs.contains(memory.id)
-                        )
-                    }
-                    .buttonStyle(.plain)
-                } else {
-                    NavigationLink(destination: MemoryDetailView(memory: memory)) {
-                        MemoryCardView(memory: memory)
-                    }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        // Green: safe delete — text stays, only photo removed
-                        if memory.originalExists && memory.sourceType == .screenshot {
-                            Button {
-                                safeDeleteTarget = memory
-                            } label: {
-                                Label("Safe\nDelete", systemImage: "trash")
-                            }
-                            .tint(.green)
-                        }
-                        // Red: full delete — removes everything permanently
-                        Button(role: .destructive) {
-                            hardDeleteTarget = memory
-                        } label: {
-                            Label("Full\nDelete", systemImage: "trash.fill")
-                        }
+            ForEach(viewModel.groupedMemories, id: \.label) { group in
+                Section(group.label) {
+                    ForEach(group.memories) { memory in
+                        memoryRow(for: memory)
                     }
                 }
             }
@@ -179,6 +151,41 @@ struct HomeView: View {
         .overlay(alignment: .bottom) {
             if viewModel.isSelecting && !viewModel.selectedIDs.isEmpty {
                 batchActionBar
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func memoryRow(for memory: Memory) -> some View {
+        if viewModel.isSelecting {
+            Button {
+                viewModel.toggleSelection(memory.id)
+            } label: {
+                MemoryCardView(
+                    memory: memory,
+                    isSelecting: true,
+                    isSelected: viewModel.selectedIDs.contains(memory.id)
+                )
+            }
+            .buttonStyle(.plain)
+        } else {
+            NavigationLink(destination: MemoryDetailView(memory: memory)) {
+                MemoryCardView(memory: memory)
+            }
+            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                if memory.originalExists && memory.sourceType == .screenshot {
+                    Button {
+                        safeDeleteTarget = memory
+                    } label: {
+                        Label("Safe\nDelete", systemImage: "trash")
+                    }
+                    .tint(.green)
+                }
+                Button(role: .destructive) {
+                    hardDeleteTarget = memory
+                } label: {
+                    Label("Full\nDelete", systemImage: "trash.fill")
+                }
             }
         }
     }
@@ -270,20 +277,17 @@ struct HomeView: View {
                 Button("Cancel") {
                     viewModel.toggleSelecting()
                 }
-            }
-        }
-
-        // Logo + app name as the centre title
-        ToolbarItem(placement: .principal) {
-            HStack(spacing: 8) {
-                Image("AppLogo")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 28, height: 28)
-                    .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
-                Text("RecallThat")
-                    .font(.headline)
-                    .fontWeight(.bold)
+            } else {
+                HStack(spacing: 8) {
+                    Image("AppLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 28, height: 28)
+                        .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    Text("RecallThat")
+                        .font(.headline)
+                        .fontWeight(.bold)
+                }
             }
         }
 
@@ -321,17 +325,6 @@ struct HomeView: View {
                         }
                     }
                     Button {
-                        Task {
-                            await viewModel.reindexAll(
-                                using: appEnv.ocrPipelineService,
-                                repository: appEnv.memoryRepository
-                            )
-                        }
-                    } label: {
-                        Label("Reindex All", systemImage: "arrow.clockwise")
-                    }
-                    Divider()
-                    Button {
                         viewModel.toggleSelecting()
                     } label: {
                         Label("Select", systemImage: "checkmark.circle")
@@ -352,5 +345,6 @@ struct HomeView: View {
         await viewModel.importScreenshots(using: appEnv.photoImportService, repository: appEnv.memoryRepository)
         await viewModel.resetFailedItems(in: appEnv.memoryRepository)
         await viewModel.runOCR(using: appEnv.ocrPipelineService, repository: appEnv.memoryRepository)
+        Task { await appEnv.embeddingPipelineService.processQueue() }
     }
 }

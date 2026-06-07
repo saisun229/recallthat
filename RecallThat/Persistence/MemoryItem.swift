@@ -20,6 +20,12 @@ final class MemoryItem {
     var deletedOriginalAt: Date?
     var sourceURL: String?
 
+    /// Raw embedding status string — defaults to "notStarted" for auto-migration of existing rows
+    var embeddingStatusRaw: String = EmbeddingStatus.notStarted.rawValue
+
+    /// Dense embedding vector stored as raw [Float] bytes; nil until embedded
+    var embeddingData: Data?
+
     init(
         id: UUID = UUID(),
         sourceTypeRaw: String = MemorySourceType.screenshot.rawValue,
@@ -33,7 +39,9 @@ final class MemoryItem {
         searchText: String = "",
         originalExists: Bool = true,
         deletedOriginalAt: Date? = nil,
-        sourceURL: String? = nil
+        sourceURL: String? = nil,
+        embeddingStatusRaw: String = EmbeddingStatus.notStarted.rawValue,
+        embeddingData: Data? = nil
     ) {
         self.id = id
         self.sourceTypeRaw = sourceTypeRaw
@@ -48,6 +56,8 @@ final class MemoryItem {
         self.originalExists = originalExists
         self.deletedOriginalAt = deletedOriginalAt
         self.sourceURL = sourceURL
+        self.embeddingStatusRaw = embeddingStatusRaw
+        self.embeddingData = embeddingData
     }
 
     /// Convert to the domain model used by services and view models
@@ -65,7 +75,21 @@ final class MemoryItem {
             searchText: searchText,
             originalExists: originalExists,
             deletedOriginalAt: deletedOriginalAt,
-            sourceURL: sourceURL
+            sourceURL: sourceURL,
+            embedding: embeddingData.map(Self.dataToFloats),
+            embeddingStatus: EmbeddingStatus(rawValue: embeddingStatusRaw) ?? .notStarted
         )
+    }
+
+    // MARK: - Float ↔ Data helpers
+
+    static func floatsToData(_ floats: [Float]) -> Data {
+        floats.withUnsafeBytes { Data($0) }
+    }
+
+    static func dataToFloats(_ data: Data) -> [Float] {
+        data.withUnsafeBytes { ptr in
+            Array(ptr.bindMemory(to: Float.self))
+        }
     }
 }
