@@ -218,7 +218,7 @@ final class ShareViewController: UIViewController {
                 return nil
             }()
             guard let url, url.scheme?.hasPrefix("http") == true else {
-                fail(reason: "URL provider returned non-http value: \(raw ?? "nil")")
+                fail(reason: "URL provider returned non-http value (type: \(type(of: raw)))")
                 return
             }
 
