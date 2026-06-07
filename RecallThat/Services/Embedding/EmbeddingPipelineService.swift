@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 @MainActor
 final class EmbeddingPipelineService {
@@ -13,6 +14,13 @@ final class EmbeddingPipelineService {
         guard !isRunning else { return }
         let apiKey = APIConfig.openAIKey
         guard !apiKey.isEmpty else { return }
+
+        // Keep running for ~30 s after backgrounding so embedding calls aren't cut mid-queue.
+        var bgTask = UIBackgroundTaskIdentifier.invalid
+        bgTask = UIApplication.shared.beginBackgroundTask(withName: "RecallThat.Embedding") {
+            UIApplication.shared.endBackgroundTask(bgTask)
+        }
+        defer { UIApplication.shared.endBackgroundTask(bgTask) }
 
         isRunning = true
         defer { isRunning = false }

@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 /// Processes the queue of memories waiting for OCR.
 /// Works through notStarted memories one at a time, updating status and text in the repository.
@@ -20,6 +21,14 @@ final class OCRPipelineService {
             $0.ocrStatus == .notStarted && $0.photoAssetIdentifier != nil
         }
         guard !queue.isEmpty else { return }
+
+        // Keep running for ~30 s after the app backgrounds so the queue doesn't stall mid-batch.
+        var bgTask = UIBackgroundTaskIdentifier.invalid
+        bgTask = UIApplication.shared.beginBackgroundTask(withName: "RecallThat.OCR") {
+            UIApplication.shared.endBackgroundTask(bgTask)
+        }
+        defer { UIApplication.shared.endBackgroundTask(bgTask) }
+
         onStart?(queue.count)
         for memory in queue {
             await processOne(memory: memory)
