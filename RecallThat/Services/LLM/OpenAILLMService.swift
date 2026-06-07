@@ -8,19 +8,32 @@ final class OpenAILLMService: LLMService {
     }
 
     func answer(query: String, context: [Memory]) async throws -> String {
-        let contextText = context.prefix(5).enumerated().map { i, m in
-            let snippet = m.ocrText.isEmpty ? m.title : String(m.ocrText.prefix(300))
-            return "[\(i + 1)] \(m.title)\n\(snippet)"
-        }.joined(separator: "\n\n")
+        let top = Array(context.prefix(10))
+        let contextText = top.enumerated().map { i, m in
+            let snippet = m.ocrText.isEmpty ? m.title : String(m.ocrText.prefix(600))
+            let dateStr = Self.formatDate(m.createdAt)
+            return "[\(i + 1)] \(m.title) (saved \(dateStr))\n\(snippet)"
+        }.joined(separator: "\n\n---\n\n")
 
         let messages: [[String: String]] = [
             [
                 "role": "system",
-                "content": "You are a personal memory assistant helping the user find and understand things they've saved. Based on the retrieved memory snippets, give a concise, helpful response to the user's search. If they asked a question, answer it. If they searched a topic, summarize what you found. Keep it to 2–3 sentences. Only use information from the provided snippets."
+                "content": """
+                You are a personal memory assistant. The user has saved screenshots of things they want to remember, and you've been given the most relevant retrieved snippets from their library.
+
+                Rules:
+                - Answer using ONLY the provided memory snippets — never invent or assume facts not present
+                - Be detailed and specific: include names, numbers, prices, dates, places, and key facts from the memories
+                - Cite each source inline with [1], [2], etc. at the end of the sentence that uses it
+                - After your answer, add a "Sources:" section listing each cited memory as: [N] Title — Date
+                - If the memories only partially answer the question, explain what you found and what might be missing
+                - Write in clear paragraphs; use a short bullet list only if multiple distinct items are being compared
+                - Do not say "I" — address the user directly
+                """
             ],
             [
                 "role": "user",
-                "content": "Search: \"\(query)\"\n\nMemories:\n\(contextText)"
+                "content": "Question: \(query)\n\nMemory snippets:\n\n\(contextText)"
             ]
         ]
 
@@ -29,11 +42,11 @@ final class OpenAILLMService: LLMService {
         request.httpMethod = "POST"
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.timeoutInterval = 20
+        request.timeoutInterval = 30
         request.httpBody = try JSONSerialization.data(withJSONObject: [
             "model": "gpt-4o-mini",
             "messages": messages,
-            "max_tokens": 400,
+            "max_tokens": 1000,
             "temperature": 0.2
         ])
 
@@ -66,5 +79,16 @@ final class OpenAILLMService: LLMService {
         }
 
         return content.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private static let dateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        f.timeStyle = .none
+        return f
+    }()
+
+    private static func formatDate(_ date: Date) -> String {
+        dateFormatter.string(from: date)
     }
 }
