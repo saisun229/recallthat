@@ -3,17 +3,14 @@ import SwiftUI
 struct ChatView: View {
     @Environment(AppEnvironment.self) private var appEnv
     @State private var viewModel = ChatViewModel()
+    @FocusState private var isInputFocused: Bool
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // OpenAI connectivity error — dismissable
+                // OpenAI connectivity error — dismissable banner
                 if let err = viewModel.openAIError {
                     openAIErrorBanner(message: err)
-                }
-                // Embedding progress hint — shown while AI index is building
-                else if appEnv.isEmbeddingRunning {
-                    embeddingProgressBanner
                 }
 
                 messageList
@@ -24,7 +21,7 @@ struct ChatView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Text("\(ChatQueryCounter.queriesRemaining)/3 today")
+                    Text("\(ChatQueryCounter.queriesRemaining)/\(ChatQueryCounter.limitPerDay) today")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -40,7 +37,7 @@ struct ChatView: View {
         }
     }
 
-    // MARK: - Banners
+    // MARK: - Error banner
 
     private func openAIErrorBanner(message: String) -> some View {
         HStack(spacing: 10) {
@@ -50,6 +47,7 @@ struct ChatView: View {
             Text(message)
                 .font(.caption)
                 .foregroundStyle(.primary)
+                .lineLimit(2)
             Spacer()
             Button {
                 viewModel.dismissOpenAIError()
@@ -62,20 +60,6 @@ struct ChatView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
         .background(Color.orange.opacity(0.12))
-        .overlay(alignment: .bottom) { Divider() }
-    }
-
-    private var embeddingProgressBanner: some View {
-        HStack(spacing: 8) {
-            ProgressView().scaleEffect(0.75)
-            Text("Building AI index — semantic search improves as it completes.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(Color(.systemGray6))
         .overlay(alignment: .bottom) { Divider() }
     }
 
@@ -127,13 +111,10 @@ struct ChatView: View {
                     .padding(.vertical, 10)
                     .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 20))
                     .submitLabel(.send)
-                    .onSubmit {
-                        Task { await viewModel.send(using: appEnv.searchService, repository: appEnv.memoryRepository) }
-                    }
+                    .focused($isInputFocused)
+                    .onSubmit { sendMessage() }
 
-                Button {
-                    Task { await viewModel.send(using: appEnv.searchService, repository: appEnv.memoryRepository) }
-                } label: {
+                Button { sendMessage() } label: {
                     Image(systemName: "arrow.up.circle.fill")
                         .font(.system(size: 30))
                         .foregroundStyle(canSend ? .blue : Color.secondary.opacity(0.35))
@@ -148,6 +129,12 @@ struct ChatView: View {
 
     private var canSend: Bool {
         !viewModel.inputText.trimmingCharacters(in: .whitespaces).isEmpty && !viewModel.isResponding
+    }
+
+    private func sendMessage() {
+        guard canSend else { return }
+        isInputFocused = false // Dismiss keyboard immediately before the async call
+        Task { await viewModel.send(using: appEnv.searchService, repository: appEnv.memoryRepository) }
     }
 }
 

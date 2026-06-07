@@ -3,10 +3,19 @@ import SwiftData
 
 @MainActor
 final class SwiftDataMemoryRepository: MemoryRepository {
-    private let context: ModelContext
+    private let container: ModelContainer
+    /// Replaced with a fresh instance when external (cross-process) writes are detected.
+    private var context: ModelContext
 
     init(context: ModelContext) {
+        self.container = context.container
         self.context = context
+    }
+
+    /// Call when the share extension (or any other process) has written to the store.
+    /// A new ModelContext has no in-memory cache, so the next fetch always reads the live store.
+    func refreshForExternalChanges() {
+        context = ModelContext(container)
     }
 
     func fetchAll() async throws -> [Memory] {
@@ -73,6 +82,5 @@ final class SwiftDataMemoryRepository: MemoryRepository {
         try context.save()
     }
 
-    // No-op: mock seed removed — real device testing uses actual Photos library
     func seedMockDataIfNeeded() throws {}
 }

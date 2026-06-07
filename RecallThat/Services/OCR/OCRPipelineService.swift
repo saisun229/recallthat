@@ -1,8 +1,6 @@
 import Foundation
 import UIKit
 
-/// Processes the queue of memories waiting for OCR.
-/// Works through notStarted memories one at a time, updating status and text in the repository.
 @MainActor
 final class OCRPipelineService {
     private let ocrService: any OCRServiceProtocol
@@ -13,8 +11,6 @@ final class OCRPipelineService {
         self.repository = repository
     }
 
-    /// Processes all memories with ocrStatus == .notStarted that have a photo asset.
-    /// Calls onStart with the total count, then onProgress after each item.
     func processQueue(onStart: ((Int) -> Void)? = nil, onProgress: ((UUID) -> Void)? = nil) async {
         guard let memories = try? await repository.fetchAll() else { return }
         let queue = memories.filter {
@@ -22,7 +18,6 @@ final class OCRPipelineService {
         }
         guard !queue.isEmpty else { return }
 
-        // Keep running for ~30 s after the app backgrounds so the queue doesn't stall mid-batch.
         var bgTask = UIBackgroundTaskIdentifier.invalid
         bgTask = UIApplication.shared.beginBackgroundTask(withName: "RecallThat.OCR") {
             UIApplication.shared.endBackgroundTask(bgTask)
@@ -42,9 +37,8 @@ final class OCRPipelineService {
         guard let identifier = memory.photoAssetIdentifier else { return }
 
         var updated = memory
-        updated.ocrStatus = .pending
-        try? await repository.update(updated)
-
+        // Skip the intermediate .pending save — only write one final result per item.
+        // Cutting saves in half removes the main-thread stalls that cause scroll/typing lag.
         do {
             let text = try await ocrService.extractText(from: identifier)
             updated.ocrText = text

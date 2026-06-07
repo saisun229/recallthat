@@ -4,8 +4,6 @@ import CoreData
 
 private let onboardingKey = "hasCompletedOnboarding"
 
-/// Bootstraps the dependency graph once the SwiftData ModelContext is available,
-/// shows onboarding on first launch, then hands off to ContentView.
 struct AppRootView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
@@ -28,24 +26,22 @@ struct AppRootView: View {
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active, let env = appEnvironment else { return }
-
-            // Always bump version on foreground so stale views refresh
             env.memoriesVersion += 1
 
-            // Check for new share-extension saves
             let shareSaveTime = UserDefaults(suiteName: "group.com.recallthat.app")?.double(forKey: "lastShareSave") ?? 0
             if shareSaveTime > lastSeenShareSave {
                 lastSeenShareSave = shareSaveTime
-                // Extra bump so HomeView / SearchView always pick up the new item
+                // Fresh context so the new share-extension item is visible immediately
+                (env.memoryRepository as? SwiftDataMemoryRepository)?.refreshForExternalChanges()
                 env.memoriesVersion += 1
-                // Share extension saves with ocrStatus=.complete; just run embedding
                 env.startEmbeddingIfNeeded()
             }
         }
-        // Cross-process SwiftData write from the Share Extension
+        // Cross-process write from the Share Extension
         .onReceive(NotificationCenter.default.publisher(for: .NSPersistentStoreRemoteChange)) { _ in
             guard let env = appEnvironment else { return }
-            // Small delay to let the WAL checkpoint complete before re-fetching
+            // Swap to a fresh context so next fetch reads the live store, not stale cache
+            (env.memoryRepository as? SwiftDataMemoryRepository)?.refreshForExternalChanges()
             Task {
                 try? await Task.sleep(for: .milliseconds(300))
                 env.memoriesVersion += 1

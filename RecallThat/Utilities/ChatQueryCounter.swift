@@ -1,7 +1,7 @@
 import Foundation
 
 enum ChatQueryCounter {
-    static let limitPerDay = 3
+    static let limitPerDay = 10
 
     private static var dayKey: String {
         let f = DateFormatter()

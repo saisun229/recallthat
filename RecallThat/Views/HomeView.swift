@@ -29,9 +29,7 @@ struct HomeView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbarContent }
         }
-        .task {
-            await runFullSync()
-        }
+        .task { await runFullSync() }
         .onChange(of: viewModel.permissionStatus) { _, newStatus in
             guard newStatus == .authorized || newStatus == .limited else { return }
             Task { await runFullSync() }
@@ -39,9 +37,7 @@ struct HomeView: View {
         .onChange(of: appEnv.memoriesVersion) { _, _ in
             Task { await viewModel.loadQuietly(from: appEnv.memoryRepository) }
         }
-        .refreshable {
-            await runFullSync()
-        }
+        .refreshable { await runFullSync() }
         // Safe Delete (single)
         .alert("Safe Delete?", isPresented: .init(
             get: { safeDeleteTarget != nil },
@@ -52,10 +48,8 @@ struct HomeView: View {
                 safeDeleteTarget = nil
                 Task {
                     await viewModel.safeDelete(
-                        target,
-                        photoService: appEnv.photoLibraryService,
-                        repository: appEnv.memoryRepository
-                    )
+                        target, photoService: appEnv.photoLibraryService,
+                        repository: appEnv.memoryRepository)
                 }
             }
             Button("Cancel", role: .cancel) { safeDeleteTarget = nil }
@@ -74,8 +68,7 @@ struct HomeView: View {
                     viewModel.selectedIDs = [target.id]
                     await viewModel.hardDeleteSelected(
                         photoService: appEnv.photoLibraryService,
-                        repository: appEnv.memoryRepository
-                    )
+                        repository: appEnv.memoryRepository)
                 }
             }
             Button("Cancel", role: .cancel) { hardDeleteTarget = nil }
@@ -91,8 +84,7 @@ struct HomeView: View {
                 Task {
                     await viewModel.safeDeleteSelected(
                         photoService: appEnv.photoLibraryService,
-                        repository: appEnv.memoryRepository
-                    )
+                        repository: appEnv.memoryRepository)
                 }
             }
             Button("Cancel", role: .cancel) {}
@@ -108,8 +100,7 @@ struct HomeView: View {
                 Task {
                     await viewModel.hardDeleteSelected(
                         photoService: appEnv.photoLibraryService,
-                        repository: appEnv.memoryRepository
-                    )
+                        repository: appEnv.memoryRepository)
                 }
             }
             Button("Cancel", role: .cancel) {}
@@ -138,12 +129,19 @@ struct HomeView: View {
 
     private var memoriesList: some View {
         List {
-            // Inline indexing progress banner — non-blocking, users can still scroll
-            if appEnv.isOCRRunning || appEnv.isEmbeddingRunning {
-                indexingBanner
-                    .listRowBackground(Color(.systemGroupedBackground))
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 4, trailing: 16))
+            // OCR progress banner — only shows when actively indexing with a count
+            if let progress = appEnv.ocrProgress, progress.total > 0 {
+                HStack(spacing: 10) {
+                    ProgressView().scaleEffect(0.8)
+                    Text(progress.description)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                }
+                .padding(.vertical, 4)
+                .listRowBackground(Color(.systemGroupedBackground))
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 4, trailing: 16))
             }
 
             ForEach(viewModel.groupedMemories, id: \.label) { group in
@@ -170,30 +168,6 @@ struct HomeView: View {
                 batchActionBar
             }
         }
-    }
-
-    // MARK: - Indexing banner (in-list, non-modal)
-
-    private var indexingBanner: some View {
-        HStack(spacing: 10) {
-            ProgressView()
-                .scaleEffect(0.8)
-            if let progress = appEnv.ocrProgress {
-                Text(progress.description)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else if appEnv.isEmbeddingRunning {
-                Text("Building AI index…")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else {
-                Text("Indexing…")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-        }
-        .padding(.vertical, 4)
     }
 
     @ViewBuilder
@@ -262,7 +236,6 @@ struct HomeView: View {
                         .padding(.vertical, 14)
                 }
                 .foregroundStyle(.green)
-
                 Divider().frame(height: 22)
             }
 
@@ -292,7 +265,6 @@ struct HomeView: View {
                     .font(.system(size: 52, weight: .ultraLight))
                     .foregroundStyle(Color.accentColor.opacity(0.7))
             }
-
             VStack(spacing: 8) {
                 Text("No Memories Yet")
                     .font(.title2)
@@ -302,7 +274,6 @@ struct HomeView: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
-
             Button {
                 Task { await runFullSync() }
             } label: {
@@ -327,18 +298,15 @@ struct HomeView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        ToolbarItem(placement: .navigationBarLeading) {
-            if viewModel.isSelecting {
-                Button("Cancel") {
-                    viewModel.toggleSelecting()
-                }
-            } else {
+        // Use .principal so the logo+title is centred and never gets a system separator
+        ToolbarItem(placement: .principal) {
+            if !viewModel.isSelecting && !viewModel.isImporting && !appEnv.isOCRRunning {
                 HStack(spacing: 6) {
                     Image("AppLogo")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 28, height: 28)
-                        .clipShape(RoundedRectangle(cornerRadius: 7))
+                        .frame(width: 26, height: 26)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
                     Text("RecallThat")
                         .font(.headline)
                         .fontWeight(.bold)
@@ -346,16 +314,29 @@ struct HomeView: View {
             }
         }
 
-        ToolbarItem(placement: .navigationBarTrailing) {
+        ToolbarItem(placement: .navigationBarLeading) {
             if viewModel.isSelecting {
-                Button("Select All") {
-                    viewModel.selectAll()
-                }
+                Button("Cancel") { viewModel.toggleSelecting() }
             } else if viewModel.isImporting {
                 HStack(spacing: 6) {
-                    ProgressView()
+                    ProgressView().scaleEffect(0.85)
                     Text("Importing…").font(.caption)
                 }
+            } else if appEnv.isOCRRunning {
+                HStack(spacing: 6) {
+                    ProgressView().scaleEffect(0.85)
+                    if let p = appEnv.ocrProgress {
+                        Text(p.description).font(.caption)
+                    } else {
+                        Text("Indexing…").font(.caption)
+                    }
+                }
+            }
+        }
+
+        ToolbarItem(placement: .navigationBarTrailing) {
+            if viewModel.isSelecting {
+                Button("Select All") { viewModel.selectAll() }
             } else if !viewModel.memories.isEmpty {
                 Menu {
                     if viewModel.memories.contains(where: { $0.ocrStatus == .failed }) {
@@ -376,9 +357,7 @@ struct HomeView: View {
                     } label: {
                         Label("Re-index All", systemImage: "arrow.triangle.2.circlepath")
                     }
-                    Button {
-                        viewModel.toggleSelecting()
-                    } label: {
+                    Button { viewModel.toggleSelecting() } label: {
                         Label("Select", systemImage: "checkmark.circle")
                     }
                 } label: {
@@ -391,12 +370,11 @@ struct HomeView: View {
 
     // MARK: - Sync
 
-    /// Loads data and launches background indexing. Returns immediately; OCR/embedding run in background.
     private func runFullSync() async {
         await viewModel.load(from: appEnv.memoryRepository)
         guard viewModel.permissionStatus == .authorized || viewModel.permissionStatus == .limited else { return }
         await viewModel.importScreenshots(using: appEnv.photoImportService, repository: appEnv.memoryRepository)
         await viewModel.resetFailedItems(in: appEnv.memoryRepository)
-        appEnv.startBackgroundIndexing() // Fire-and-forget — UI stays responsive
+        appEnv.startBackgroundIndexing()
     }
 }

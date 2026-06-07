@@ -5,8 +5,6 @@ import UIKit
 final class EmbeddingPipelineService {
     private let repository: any MemoryRepository
     private(set) var isRunning = false
-
-    /// Last human-readable error from the OpenAI pipeline; nil when everything is healthy.
     private(set) var lastError: String? = nil
 
     init(repository: any MemoryRepository) {
@@ -58,9 +56,8 @@ final class EmbeddingPipelineService {
     // MARK: - Private
 
     private func embedSingle(_ memory: Memory, using service: any EmbeddingService) async -> Bool {
+        // Skip the intermediate .pending save — only one write per item to reduce main-thread stalls.
         var updated = memory
-        updated.embeddingStatus = .pending
-        try? await repository.update(updated)
 
         do {
             updated.embedding = try await service.embed(text: memory.searchText)
@@ -78,14 +75,12 @@ final class EmbeddingPipelineService {
             lastError = "OpenAI rate limit reached. Embeddings will retry next time."
             try? await repository.update(updated)
             return false
-        } catch EmbeddingError.networkError(let err) {
-            // Network failure is transient — reset so it retries on next launch
+        } catch EmbeddingError.networkError {
             updated.embeddingStatus = .notStarted
             lastError = "No internet connection. Semantic search will be available when you're back online."
             try? await repository.update(updated)
             return false
         } catch EmbeddingError.apiError(let msg) {
-            // API-level error for this item; mark failed and continue with the rest
             updated.embeddingStatus = .failed
             lastError = "OpenAI error: \(msg)"
             try? await repository.update(updated)

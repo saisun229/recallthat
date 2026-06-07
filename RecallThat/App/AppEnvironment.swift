@@ -11,7 +11,6 @@ final class AppEnvironment {
     let searchService: any SearchServiceProtocol
     let embeddingPipelineService: EmbeddingPipelineService
 
-    /// Incremented whenever memories are bulk-modified so views that hold their own copy re-fetch.
     var memoriesVersion: Int = 0
 
     // MARK: - Background indexing state (observable by all tabs)
@@ -25,9 +24,7 @@ final class AppEnvironment {
     struct OCRProgress {
         let completed: Int
         let total: Int
-        var description: String {
-            total > 0 ? "Indexing \(completed)/\(total)…" : "Indexing…"
-        }
+        var description: String { "Indexing \(completed)/\(total)" }
     }
 
     init(
@@ -46,22 +43,23 @@ final class AppEnvironment {
         self.embeddingPipelineService = embeddingPipelineService
     }
 
-    /// Fire-and-forget: runs OCR on any pending photos, then chains embedding.
-    /// Safe to call multiple times — no-ops if already running.
+    /// Fire-and-forget: OCR → embedding chain. Safe to call multiple times; no-ops if already running.
     func startBackgroundIndexing() {
         guard !isOCRRunning else { return }
+        // Set flag immediately before spawning the task to prevent double-start on rapid calls
+        isOCRRunning = true
         Task { await runOCRThenEmbed() }
     }
 
-    /// Fire-and-forget: only runs embedding (used after share-extension saves, which skip OCR).
+    /// Fire-and-forget: embedding only (for share-extension saves that arrive already OCR-complete).
     func startEmbeddingIfNeeded() {
         guard !embeddingPipelineService.isRunning else { return }
         Task { await embeddingPipelineService.processQueue() }
     }
 
+    // MARK: - Private
+
     private func runOCRThenEmbed() async {
-        guard !isOCRRunning else { return }
-        isOCRRunning = true
         var completed = 0
 
         await ocrPipelineService.processQueue(
@@ -80,10 +78,9 @@ final class AppEnvironment {
 
         isOCRRunning = false
         ocrProgress = nil
-        memoriesVersion += 1 // Refresh list with fresh OCR text
+        memoriesVersion += 1 // Refresh list with new OCR text
 
-        // Chain: embed everything that completed OCR
         await embeddingPipelineService.processQueue()
-        memoriesVersion += 1 // Refresh again so search picks up new embeddings
+        memoriesVersion += 1 // Refresh so search picks up new embeddings
     }
 }
