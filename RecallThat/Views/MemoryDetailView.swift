@@ -157,6 +157,22 @@ struct MemoryDetailView: View {
                     .fontWeight(.medium)
             }
 
+            // AI embedding status
+            HStack(alignment: .center, spacing: 6) {
+                Image(systemName: "brain")
+                    .foregroundStyle(.secondary)
+                    .frame(width: 20, alignment: .center)
+                Circle()
+                    .fill(embeddingDotColor)
+                    .frame(width: 8, height: 8)
+                Text("AI Ready")
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text(embeddingStatusLabel)
+                    .foregroundStyle(embeddingStatusColor)
+                    .fontWeight(.medium)
+            }
+
             // Original photo
             HStack(alignment: .center) {
                 Label("Original", systemImage: "photo")
@@ -247,6 +263,33 @@ struct MemoryDetailView: View {
 
     private var indexedDotColor: Color {
         viewModel.memory.ocrStatus == .complete ? .green : Color.secondary.opacity(0.35)
+    }
+
+    private var embeddingDotColor: Color {
+        switch viewModel.memory.embeddingStatus {
+        case .complete:   return .blue
+        case .pending:    return .orange
+        case .failed:     return .red
+        case .notStarted: return Color.secondary.opacity(0.35)
+        }
+    }
+
+    private var embeddingStatusLabel: String {
+        switch viewModel.memory.embeddingStatus {
+        case .notStarted: return "Queued"
+        case .pending:    return "Processing…"
+        case .complete:   return "Ready"
+        case .failed:     return "Failed"
+        }
+    }
+
+    private var embeddingStatusColor: Color {
+        switch viewModel.memory.embeddingStatus {
+        case .complete:   return .blue
+        case .pending:    return .orange
+        case .failed:     return .red
+        case .notStarted: return .secondary
+        }
     }
 
     private var ocrStatusColor: Color {

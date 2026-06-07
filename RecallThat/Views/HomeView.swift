@@ -289,9 +289,11 @@ struct HomeView: View {
                 }
             } else {
                 HStack(spacing: 6) {
-                    Image(systemName: "brain.head.profile")
-                        .font(.system(size: 19, weight: .medium))
-                        .foregroundStyle(.blue)
+                    Image("AppLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 28, height: 28)
+                        .clipShape(RoundedRectangle(cornerRadius: 7))
                     Text("RecallThat")
                         .font(.headline)
                         .fontWeight(.bold)

@@ -18,40 +18,7 @@ struct SearchView: View {
                     ContentUnavailableView.search(text: viewModel.query)
                 } else {
                     List {
-                        if viewModel.isAnswering {
-                            Section {
-                                HStack(spacing: 10) {
-                                    ProgressView()
-                                    Text("Thinking…")
-                                        .foregroundStyle(.secondary)
-                                        .font(.subheadline)
-                                }
-                                .padding(.vertical, 4)
-                            } header: {
-                                Label("AI Answer", systemImage: "sparkles")
-                            }
-                        } else if let answer = viewModel.aiAnswer {
-                            Section {
-                                Text(answer)
-                                    .font(.subheadline)
-                                    .padding(.vertical, 4)
-                                    .textSelection(.enabled)
-                            } header: {
-                                Label("AI Answer", systemImage: "sparkles")
-                            }
-                        }
-
-                        if !viewModel.results.isEmpty {
-                            if viewModel.aiAnswer != nil || viewModel.isAnswering {
-                                Section("Sources") {
-                                    ForEach(viewModel.results) { resultRow(for: $0) }
-                                }
-                            } else {
-                                Section {
-                                    ForEach(viewModel.results) { resultRow(for: $0) }
-                                }
-                            }
-                        }
+                        ForEach(viewModel.results) { resultRow(for: $0) }
                     }
                     .listStyle(.plain)
                 }

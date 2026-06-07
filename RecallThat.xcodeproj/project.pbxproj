@@ -55,6 +55,10 @@
 		AA000032000000000000001A /* HybridSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000032000000000000001B /* HybridSearchService.swift */; };
 		AA000033000000000000001A /* LLMServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000033000000000000001B /* LLMServiceProtocol.swift */; };
 		AA000034000000000000001A /* OpenAILLMService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000034000000000000001B /* OpenAILLMService.swift */; };
+		AA000035000000000000001A /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000035000000000000001B /* ChatMessage.swift */; };
+		AA000036000000000000001A /* ChatQueryCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000036000000000000001B /* ChatQueryCounter.swift */; };
+		AA000037000000000000001A /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000037000000000000001B /* ChatViewModel.swift */; };
+		AA000038000000000000001A /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000038000000000000001B /* ChatView.swift */; };
 		BB00002A000000000000001A /* EmbeddingStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002A000000000000001B /* EmbeddingStatus.swift */; };
 /* End PBXBuildFile section */
 
@@ -107,6 +111,10 @@
 		AA000032000000000000001B /* HybridSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HybridSearchService.swift; sourceTree = "<group>"; };
 		AA000033000000000000001B /* LLMServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMServiceProtocol.swift; sourceTree = "<group>"; };
 		AA000034000000000000001B /* OpenAILLMService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAILLMService.swift; sourceTree = "<group>"; };
+		AA000035000000000000001B /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
+		AA000036000000000000001B /* ChatQueryCounter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatQueryCounter.swift; sourceTree = "<group>"; };
+		AA000037000000000000001B /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
+		AA000038000000000000001B /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -193,6 +201,7 @@
 				AA000004000000000000001B /* MemorySourceType.swift */,
 				AA000005000000000000001B /* OCRStatus.swift */,
 				AA00002A000000000000001B /* EmbeddingStatus.swift */,
+				AA000035000000000000001B /* ChatMessage.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -208,6 +217,7 @@
 				AA000022000000000000001B /* AssetThumbnailView.swift */,
 				AA000023000000000000001B /* PhotoPermissionView.swift */,
 				AA000028000000000000001B /* OnboardingView.swift */,
+				AA000038000000000000001B /* ChatView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -218,6 +228,7 @@
 				AA000015000000000000001B /* HomeViewModel.swift */,
 				AA000016000000000000001B /* SearchViewModel.swift */,
 				AA000027000000000000001B /* MemoryDetailViewModel.swift */,
+				AA000037000000000000001B /* ChatViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -309,6 +320,7 @@
 				AA00002C000000000000001B /* KeychainHelper.swift */,
 				AA00002D000000000000001B /* VectorMath.swift */,
 				AA00002E000000000000001B /* URLSourceType.swift */,
+				AA000036000000000000001B /* ChatQueryCounter.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -502,6 +514,10 @@
 				AA000032000000000000001A /* HybridSearchService.swift in Sources */,
 				AA000033000000000000001A /* LLMServiceProtocol.swift in Sources */,
 				AA000034000000000000001A /* OpenAILLMService.swift in Sources */,
+				AA000035000000000000001A /* ChatMessage.swift in Sources */,
+				AA000036000000000000001A /* ChatQueryCounter.swift in Sources */,
+				AA000037000000000000001A /* ChatViewModel.swift in Sources */,
+				AA000038000000000000001A /* ChatView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
