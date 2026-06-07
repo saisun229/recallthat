@@ -68,41 +68,96 @@ final class ShareViewController: UIViewController {
         guard let items = extensionContext?.inputItems as? [NSExtensionItem] else {
             fail(); return
         }
+
+        // Scan ALL attachments across all items before deciding how to handle.
+        // Social apps (Instagram, Facebook) send image + URL together; URL must win.
+        var urlProvider: NSItemProvider? = nil
+        var imageProvider: NSItemProvider? = nil
+        var pdfProvider: NSItemProvider? = nil
+        var videoProvider: NSItemProvider? = nil
+        var audioProvider: NSItemProvider? = nil
+        var textProvider: NSItemProvider? = nil
+        var docProvider: (NSItemProvider, String, String)? = nil  // (provider, typeID, label)
+
         for item in items {
             for attachment in item.attachments ?? [] {
-                if attachment.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
-                    await handleImage(attachment); return
+                if urlProvider == nil && attachment.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
+                    urlProvider = attachment
                 }
-                if attachment.hasItemConformingToTypeIdentifier(UTType.pdf.identifier) {
-                    await handleFile(attachment, sourceType: .sharedPDF, label: "PDF"); return
+                if textProvider == nil && attachment.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
+                    textProvider = attachment
                 }
-                if attachment.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
-                    await handleFile(attachment, sourceType: .sharedVideo, label: "Video"); return
+                if imageProvider == nil && attachment.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
+                    imageProvider = attachment
                 }
-                if attachment.hasItemConformingToTypeIdentifier(UTType.audio.identifier) {
-                    await handleFile(attachment, sourceType: .sharedAudio, label: "Audio"); return
+                if pdfProvider == nil && attachment.hasItemConformingToTypeIdentifier(UTType.pdf.identifier) {
+                    pdfProvider = attachment
                 }
-                if attachment.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
-                    await handleURL(attachment); return
+                if videoProvider == nil && attachment.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
+                    videoProvider = attachment
                 }
-                if attachment.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
-                    await handleText(attachment); return
+                if audioProvider == nil && attachment.hasItemConformingToTypeIdentifier(UTType.audio.identifier) {
+                    audioProvider = attachment
                 }
-                for uti in Self.wordUTIs where attachment.hasItemConformingToTypeIdentifier(uti) {
-                    await handleDocument(attachment, typeID: uti, label: "Document"); return
-                }
-                for uti in Self.spreadsheetUTIs where attachment.hasItemConformingToTypeIdentifier(uti) {
-                    await handleDocument(attachment, typeID: uti, label: "Spreadsheet"); return
-                }
-                for uti in Self.presentationUTIs where attachment.hasItemConformingToTypeIdentifier(uti) {
-                    await handleDocument(attachment, typeID: uti, label: "Presentation"); return
-                }
-                if attachment.hasItemConformingToTypeIdentifier(UTType.data.identifier) {
-                    await handleDocument(attachment, typeID: UTType.data.identifier, label: "File"); return
+                if docProvider == nil {
+                    for uti in Self.wordUTIs where attachment.hasItemConformingToTypeIdentifier(uti) {
+                        docProvider = (attachment, uti, "Document"); break
+                    }
+                    for uti in Self.spreadsheetUTIs where attachment.hasItemConformingToTypeIdentifier(uti) {
+                        docProvider = (attachment, uti, "Spreadsheet"); break
+                    }
+                    for uti in Self.presentationUTIs where attachment.hasItemConformingToTypeIdentifier(uti) {
+                        docProvider = (attachment, uti, "Presentation"); break
+                    }
                 }
             }
         }
+
+        // If a text provider looks like a URL, promote it to URL handling
+        if urlProvider == nil, let tp = textProvider {
+            if let raw = try? await tp.loadItem(forTypeIdentifier: UTType.plainText.identifier),
+               let str = raw as? String,
+               let url = URL(string: str.trimmingCharacters(in: .whitespacesAndNewlines)),
+               url.scheme?.hasPrefix("http") == true {
+                await handleURLDirectly(url); return
+            }
+        }
+
+        // Priority: URL > PDF > video > audio > image > text > document > data
+        if let p = urlProvider                   { await handleURL(p); return }
+        if let p = pdfProvider                   { await handleFile(p, sourceType: .sharedPDF, label: "PDF"); return }
+        if let p = videoProvider                 { await handleFile(p, sourceType: .sharedVideo, label: "Video"); return }
+        if let p = audioProvider                 { await handleFile(p, sourceType: .sharedAudio, label: "Audio"); return }
+        if let p = imageProvider                 { await handleImage(p); return }
+        if let p = textProvider                  { await handleText(p); return }
+        if let (p, uti, label) = docProvider     { await handleDocument(p, typeID: uti, label: label); return }
+
+        // Generic data fallback
+        for item in items {
+            for attachment in item.attachments ?? [] where attachment.hasItemConformingToTypeIdentifier(UTType.data.identifier) {
+                await handleDocument(attachment, typeID: UTType.data.identifier, label: "File"); return
+            }
+        }
         fail()
+    }
+
+    // Handles a URL value already resolved to a URL struct (from text-promoted-to-URL path)
+    private func handleURLDirectly(_ url: URL) async {
+        let meta = await fetchMetadata(for: url)
+        let title = meta.title ?? url.host ?? url.absoluteString
+        let text = [title, meta.description].compactMap { $0 }.joined(separator: "\n")
+        let id = UUID()
+        var thumbPath: String? = nil
+        if let imgURL = meta.imageURL {
+            thumbPath = await downloadThumbnail(from: imgURL, id: id)
+        }
+        do {
+            try save(MemoryPayload(id: id, sourceType: .sharedURL, title: title,
+                                  ocrText: text, thumbnailPath: thumbPath, sourceURL: url.absoluteString))
+            succeed()
+        } catch {
+            fail()
+        }
     }
 
     // MARK: - Image handler

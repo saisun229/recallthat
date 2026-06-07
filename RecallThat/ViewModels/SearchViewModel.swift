@@ -40,26 +40,14 @@ final class SearchViewModel {
             self.results = found
             self.isSearching = false
 
-            // AI answer for question-style queries
-            if self.isQuestion(trimmed), !found.isEmpty, APIConfig.hasOpenAIKey {
+            // AI response for any query with results
+            if !found.isEmpty, APIConfig.hasOpenAIKey {
                 self.isAnswering = true
                 let llm = OpenAILLMService(apiKey: APIConfig.openAIKey)
-                self.aiAnswer = try? await llm.answer(question: trimmed, context: found)
+                self.aiAnswer = try? await llm.answer(query: trimmed, context: found)
                 self.isAnswering = false
             }
         }
     }
 
-    // MARK: - Question detection
-
-    private static let questionPrefixes = [
-        "what", "when", "where", "who", "how", "why", "which",
-        "is", "are", "can", "does", "do", "did", "was", "were", "will", "should"
-    ]
-
-    private func isQuestion(_ text: String) -> Bool {
-        if text.hasSuffix("?") { return true }
-        let first = text.lowercased().components(separatedBy: .whitespaces).first ?? ""
-        return Self.questionPrefixes.contains(first)
-    }
 }

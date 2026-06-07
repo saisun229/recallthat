@@ -64,6 +64,11 @@ final class HomeViewModel {
         isLoading = false
     }
 
+    /// Refresh the list silently — no loading spinner, used for background version bumps.
+    func loadQuietly(from repository: any MemoryRepository) async {
+        memories = (try? await repository.fetchAll()) ?? memories
+    }
+
     func requestPhotoAccess(using service: any PhotoLibraryServiceProtocol) async {
         permissionStatus = await service.requestAuthorization()
     }

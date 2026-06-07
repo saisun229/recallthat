@@ -7,7 +7,7 @@ final class OpenAILLMService: LLMService {
         self.apiKey = apiKey
     }
 
-    func answer(question: String, context: [Memory]) async throws -> String {
+    func answer(query: String, context: [Memory]) async throws -> String {
         let contextText = context.prefix(5).enumerated().map { i, m in
             let snippet = m.ocrText.isEmpty ? m.title : String(m.ocrText.prefix(300))
             return "[\(i + 1)] \(m.title)\n\(snippet)"
@@ -16,11 +16,11 @@ final class OpenAILLMService: LLMService {
         let messages: [[String: String]] = [
             [
                 "role": "system",
-                "content": "You are a personal memory assistant. Answer the user's question using ONLY the provided context entries. Be concise and direct. If the answer isn't clearly in the context, say so briefly."
+                "content": "You are a personal memory assistant helping the user find and understand things they've saved. Based on the retrieved memory snippets, give a concise, helpful response to the user's search. If they asked a question, answer it. If they searched a topic, summarize what you found. Keep it to 2–3 sentences. Only use information from the provided snippets."
             ],
             [
                 "role": "user",
-                "content": "Context:\n\(contextText)\n\nQuestion: \(question)"
+                "content": "Search: \"\(query)\"\n\nMemories:\n\(contextText)"
             ]
         ]
 

@@ -37,7 +37,8 @@ struct HomeView: View {
             Task { await runFullSync() }
         }
         .onChange(of: appEnv.memoriesVersion) { _, _ in
-            Task { await runFullSync() }
+            // Quiet refresh — avoids loading spinner and full photo-import on every version bump
+            Task { await viewModel.loadQuietly(from: appEnv.memoryRepository) }
         }
         .refreshable {
             await runFullSync()
@@ -139,10 +140,19 @@ struct HomeView: View {
     private var memoriesList: some View {
         List {
             ForEach(viewModel.groupedMemories, id: \.label) { group in
-                Section(group.label) {
-                    ForEach(group.memories) { memory in
-                        memoryRow(for: memory)
-                    }
+                // Section label as a plain row — scrolls with content, never floats
+                Text(group.label)
+                    .font(.footnote)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+                    .tracking(0.5)
+                    .listRowBackground(Color(.systemGroupedBackground))
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 20, leading: 16, bottom: 2, trailing: 16))
+
+                ForEach(group.memories) { memory in
+                    memoryRow(for: memory)
                 }
             }
         }
@@ -278,12 +288,10 @@ struct HomeView: View {
                     viewModel.toggleSelecting()
                 }
             } else {
-                HStack(spacing: 8) {
-                    Image("AppLogo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 28, height: 28)
-                        .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                HStack(spacing: 6) {
+                    Image(systemName: "brain.head.profile")
+                        .font(.system(size: 19, weight: .medium))
+                        .foregroundStyle(.blue)
                     Text("RecallThat")
                         .font(.headline)
                         .fontWeight(.bold)

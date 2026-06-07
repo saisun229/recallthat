@@ -1,5 +1,5 @@
 import Foundation
 
 protocol LLMService {
-    func answer(question: String, context: [Memory]) async throws -> String
+    func answer(query: String, context: [Memory]) async throws -> String
 }
