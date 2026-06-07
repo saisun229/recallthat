@@ -37,13 +37,12 @@ struct HomeView: View {
             Task { await runFullSync() }
         }
         .onChange(of: appEnv.memoriesVersion) { _, _ in
-            // Quiet refresh — avoids loading spinner and full photo-import on every version bump
             Task { await viewModel.loadQuietly(from: appEnv.memoryRepository) }
         }
         .refreshable {
             await runFullSync()
         }
-        // Safe Delete (single) — removes photo from Photos, text stays
+        // Safe Delete (single)
         .alert("Safe Delete?", isPresented: .init(
             get: { safeDeleteTarget != nil },
             set: { if !$0 { safeDeleteTarget = nil } }
@@ -63,7 +62,7 @@ struct HomeView: View {
         } message: {
             Text("The photo is removed from your Photos library. The extracted text stays in RecallThat — you can still search for this memory.")
         }
-        // Full Delete (single) — removes everything permanently
+        // Full Delete (single)
         .alert("Full Delete?", isPresented: .init(
             get: { hardDeleteTarget != nil },
             set: { if !$0 { hardDeleteTarget = nil } }
@@ -83,7 +82,7 @@ struct HomeView: View {
         } message: {
             Text("Removes the memory and its original photo from RecallThat completely. This cannot be undone.")
         }
-        // Batch safe delete — centered alert, single Photos permission prompt
+        // Batch safe delete
         .alert(
             "Safe Delete \(viewModel.selectedIDs.count) Screenshot\(viewModel.selectedIDs.count == 1 ? "" : "s")?",
             isPresented: $showBatchSafeDeleteConfirm
@@ -100,7 +99,7 @@ struct HomeView: View {
         } message: {
             Text("Photos are removed from your library in one step. Extracted text stays searchable in RecallThat.")
         }
-        // Batch full delete — centered alert
+        // Batch full delete
         .alert(
             "Full Delete \(viewModel.selectedIDs.count) Memor\(viewModel.selectedIDs.count == 1 ? "y" : "ies")?",
             isPresented: $showBatchHardDeleteConfirm
@@ -128,7 +127,7 @@ struct HomeView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let error = viewModel.errorMessage {
             errorView(message: error)
-        } else if viewModel.memories.isEmpty {
+        } else if viewModel.memories.isEmpty && !appEnv.isOCRRunning {
             emptyView
         } else {
             memoriesList
@@ -139,9 +138,16 @@ struct HomeView: View {
 
     private var memoriesList: some View {
         List {
+            // Inline indexing progress banner — non-blocking, users can still scroll
+            if appEnv.isOCRRunning || appEnv.isEmbeddingRunning {
+                indexingBanner
+                    .listRowBackground(Color(.systemGroupedBackground))
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 4, trailing: 16))
+            }
+
             ForEach(viewModel.groupedMemories, id: \.label) { group in
                 let isDebugSection = group.label == "Share Failures"
-                // Section label as a plain row — scrolls with content, never floats
                 Text(group.label)
                     .font(.footnote)
                     .fontWeight(.semibold)
@@ -164,6 +170,30 @@ struct HomeView: View {
                 batchActionBar
             }
         }
+    }
+
+    // MARK: - Indexing banner (in-list, non-modal)
+
+    private var indexingBanner: some View {
+        HStack(spacing: 10) {
+            ProgressView()
+                .scaleEffect(0.8)
+            if let progress = appEnv.ocrProgress {
+                Text(progress.description)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else if appEnv.isEmbeddingRunning {
+                Text("Building AI index…")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("Indexing…")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+        }
+        .padding(.vertical, 4)
     }
 
     @ViewBuilder
@@ -326,28 +356,25 @@ struct HomeView: View {
                     ProgressView()
                     Text("Importing…").font(.caption)
                 }
-            } else if viewModel.isRunningOCR {
-                HStack(spacing: 6) {
-                    ProgressView()
-                    if let progress = viewModel.ocrProgress {
-                        Text(progress.description).font(.caption)
-                    } else {
-                        Text("Indexing…").font(.caption)
-                    }
-                }
             } else if !viewModel.memories.isEmpty {
                 Menu {
                     if viewModel.memories.contains(where: { $0.ocrStatus == .failed }) {
                         Button {
                             Task {
-                                await viewModel.retryFailedOCR(
-                                    using: appEnv.ocrPipelineService,
-                                    repository: appEnv.memoryRepository
-                                )
+                                await viewModel.resetFailedItems(in: appEnv.memoryRepository)
+                                appEnv.startBackgroundIndexing()
                             }
                         } label: {
                             Label("Retry Failed", systemImage: "arrow.clockwise.circle")
                         }
+                    }
+                    Button {
+                        Task {
+                            await viewModel.reindexAll(in: appEnv.memoryRepository)
+                            appEnv.startBackgroundIndexing()
+                        }
+                    } label: {
+                        Label("Re-index All", systemImage: "arrow.triangle.2.circlepath")
                     }
                     Button {
                         viewModel.toggleSelecting()
@@ -364,12 +391,12 @@ struct HomeView: View {
 
     // MARK: - Sync
 
+    /// Loads data and launches background indexing. Returns immediately; OCR/embedding run in background.
     private func runFullSync() async {
         await viewModel.load(from: appEnv.memoryRepository)
         guard viewModel.permissionStatus == .authorized || viewModel.permissionStatus == .limited else { return }
         await viewModel.importScreenshots(using: appEnv.photoImportService, repository: appEnv.memoryRepository)
         await viewModel.resetFailedItems(in: appEnv.memoryRepository)
-        await viewModel.runOCR(using: appEnv.ocrPipelineService, repository: appEnv.memoryRepository)
-        Task { await appEnv.embeddingPipelineService.processQueue() }
+        appEnv.startBackgroundIndexing() // Fire-and-forget — UI stays responsive
     }
 }

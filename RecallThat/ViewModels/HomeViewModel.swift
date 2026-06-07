@@ -8,22 +8,13 @@ final class HomeViewModel {
     var memories: [Memory] = []
     var isLoading: Bool = false
     var isImporting: Bool = false
-    var isRunningOCR: Bool = false
-    var ocrProgress: OCRProgress? = nil
     var errorMessage: String? = nil
     var permissionStatus: PHAuthorizationStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
-
-    struct OCRProgress {
-        let completed: Int
-        let total: Int
-        var description: String { "Indexing \(completed) of \(total)…" }
-    }
 
     // MARK: - Debug entries (from failed share extension saves)
 
     private(set) var debugEntries: [Memory] = []
 
-    /// IDs that belong to debug (failed share) entries, not the real database.
     var debugEntryIDs: Set<UUID> { Set(debugEntries.map(\.id)) }
 
     func loadDebugEntries() {
@@ -82,7 +73,6 @@ final class HomeViewModel {
     var groupedMemories: [(label: String, memories: [Memory])] {
         var groups: [(label: String, memories: [Memory])] = []
 
-        // Failed share debug entries always surfaced at the top
         if !debugEntries.isEmpty {
             groups.append((label: "Share Failures", memories: debugEntries))
         }
@@ -129,7 +119,6 @@ final class HomeViewModel {
         isLoading = false
     }
 
-    /// Refresh the list silently — no loading spinner, used for background version bumps.
     func loadQuietly(from repository: any MemoryRepository) async {
         memories = (try? await repository.fetchAll()) ?? memories
         loadDebugEntries()
@@ -155,28 +144,7 @@ final class HomeViewModel {
         isImporting = false
     }
 
-    func runOCR(using pipeline: OCRPipelineService, repository: any MemoryRepository) async {
-        guard !isRunningOCR else { return }
-        isRunningOCR = true
-        var completed = 0
-
-        await pipeline.processQueue(
-            onStart: { [weak self] total in
-                self?.ocrProgress = OCRProgress(completed: 0, total: total)
-            },
-            onProgress: { [weak self] _ in
-                completed += 1
-                if let total = self?.ocrProgress?.total {
-                    self?.ocrProgress = OCRProgress(completed: completed, total: total)
-                }
-            }
-        )
-
-        memories = (try? await repository.fetchAll()) ?? memories
-        ocrProgress = nil
-        isRunningOCR = false
-    }
-
+    /// Reset OCR-failed photo memories back to notStarted so the pipeline retries them.
     func resetFailedItems(in repository: any MemoryRepository) async {
         let failed = memories.filter { $0.ocrStatus == .failed && $0.photoAssetIdentifier != nil }
         guard !failed.isEmpty else { return }
@@ -187,20 +155,24 @@ final class HomeViewModel {
         await load(from: repository)
     }
 
-    func retryFailedOCR(using pipeline: OCRPipelineService, repository: any MemoryRepository) async {
-        await resetFailedItems(in: repository)
-        await runOCR(using: pipeline, repository: repository)
-    }
-
-    func reindexAll(using pipeline: OCRPipelineService, repository: any MemoryRepository) async {
+    /// Reset ALL photo memories to notStarted for a full re-index (also clears embeddings).
+    func reindexAll(in repository: any MemoryRepository) async {
         for var memory in memories where memory.photoAssetIdentifier != nil {
+            var needsUpdate = false
             if memory.ocrStatus != .notStarted {
                 memory.ocrStatus = .notStarted
+                needsUpdate = true
+            }
+            if memory.embeddingStatus != .notStarted {
+                memory.embeddingStatus = .notStarted
+                memory.embedding = nil
+                needsUpdate = true
+            }
+            if needsUpdate {
                 try? await repository.update(memory)
             }
         }
         await load(from: repository)
-        await runOCR(using: pipeline, repository: repository)
     }
 
     // MARK: - Selection
@@ -251,7 +223,6 @@ final class HomeViewModel {
         let targets = memories.filter { selectedIDs.contains($0.id) && $0.originalExists }
         let identifiers = targets.compactMap(\.photoAssetIdentifier)
 
-        // Delete all originals in one Photos request — single permission prompt
         try? await photoService.deleteAssets(identifiers: identifiers)
 
         let now = Date()

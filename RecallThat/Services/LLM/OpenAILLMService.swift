@@ -29,6 +29,7 @@ final class OpenAILLMService: LLMService {
         request.httpMethod = "POST"
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 20
         request.httpBody = try JSONSerialization.data(withJSONObject: [
             "model": "gpt-4o-mini",
             "messages": messages,
@@ -36,9 +37,17 @@ final class OpenAILLMService: LLMService {
             "temperature": 0.2
         ])
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await URLSession.shared.data(for: request)
+        } catch {
+            throw EmbeddingError.networkError(error)
+        }
 
         if let http = response as? HTTPURLResponse, http.statusCode != 200 {
+            if http.statusCode == 429 { throw EmbeddingError.rateLimited }
+            if http.statusCode == 401 { throw EmbeddingError.apiKeyMissing }
             let errMsg: String
             if let errObj = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["error"] as? [String: Any],
                let msg = errObj["message"] as? String {

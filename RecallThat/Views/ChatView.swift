@@ -7,6 +7,15 @@ struct ChatView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
+                // OpenAI connectivity error — dismissable
+                if let err = viewModel.openAIError {
+                    openAIErrorBanner(message: err)
+                }
+                // Embedding progress hint — shown while AI index is building
+                else if appEnv.isEmbeddingRunning {
+                    embeddingProgressBanner
+                }
+
                 messageList
                 Divider()
                 inputBar
@@ -29,6 +38,45 @@ struct ChatView: View {
                 ))
             }
         }
+    }
+
+    // MARK: - Banners
+
+    private func openAIErrorBanner(message: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+                .font(.subheadline)
+            Text(message)
+                .font(.caption)
+                .foregroundStyle(.primary)
+            Spacer()
+            Button {
+                viewModel.dismissOpenAIError()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(Color.orange.opacity(0.12))
+        .overlay(alignment: .bottom) { Divider() }
+    }
+
+    private var embeddingProgressBanner: some View {
+        HStack(spacing: 8) {
+            ProgressView().scaleEffect(0.75)
+            Text("Building AI index — semantic search improves as it completes.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(Color(.systemGray6))
+        .overlay(alignment: .bottom) { Divider() }
     }
 
     // MARK: - Message list

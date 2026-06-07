@@ -73,7 +73,6 @@ final class ShareViewController: UIViewController {
             fail(reason: "No input items from extensionContext"); return
         }
 
-        // Collect every type identifier present — used for debug entries
         var allTypes: [String] = []
         var urlProvider: NSItemProvider? = nil
         var imageProvider: NSItemProvider? = nil
@@ -118,10 +117,9 @@ final class ShareViewController: UIViewController {
             }
         }
 
-        // Store for debug reporting
         lastDetectedTypes = Array(Set(allTypes)).sorted()
 
-        // If a text provider looks like a URL, promote it to URL handling
+        // Promote a plain-text URL to URL handling
         if urlProvider == nil, let tp = textProvider {
             if let raw = try? await tp.loadItem(forTypeIdentifier: UTType.plainText.identifier),
                let str = (raw as? String) ?? (raw as? NSString as String?),
@@ -181,7 +179,9 @@ final class ShareViewController: UIViewController {
                 if let data = raw as? Data     { return UIImage(data: data) }
                 return nil
             }()
-            guard let image else { fail(reason: "Image provider returned unrecognised type: \(type(of: raw))"); return }
+            guard let image else {
+                fail(reason: "Image provider returned unrecognised type: \(type(of: raw))"); return
+            }
 
             let text = (try? await recognizeText(in: image)) ?? ""
             let firstLine = text.components(separatedBy: "\n")
@@ -210,7 +210,6 @@ final class ShareViewController: UIViewController {
         do {
             let raw = try await provider.loadItem(forTypeIdentifier: UTType.url.identifier)
 
-            // Accept both URL and String (some apps return NSString for URL items)
             let url: URL? = {
                 if let u = raw as? URL { return u }
                 if let s = (raw as? String) ?? (raw as? NSString as String?),
@@ -388,12 +387,10 @@ final class ShareViewController: UIViewController {
         if let videoID = youTubeVideoID(from: url) {
             return await youTubeMetadata(videoID: videoID)
         }
-        // Timeout after 5 s to avoid stalling the extension
-        let session = URLSession(configuration: {
-            let c = URLSessionConfiguration.default
-            c.timeoutIntervalForRequest = 5
-            return c
-        }())
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 5
+        config.timeoutIntervalForResource = 8
+        let session = URLSession(configuration: config)
         guard let (data, _) = try? await session.data(from: url),
               let html = String(data: data, encoding: .utf8)
                       ?? String(data: data, encoding: .isoLatin1) else {
@@ -510,9 +507,21 @@ final class ShareViewController: UIViewController {
         let sourceURL: String?
     }
 
-    private enum SaveError: Error {
+    private enum SaveError: Error, LocalizedError {
         case noGroupContainer
-        case swiftDataError(String)
+        case containerInitFailed(String)
+        case saveFailed(String)
+
+        var errorDescription: String? {
+            switch self {
+            case .noGroupContainer:
+                return "App Group container unavailable. Ensure the App Group entitlement is configured."
+            case .containerInitFailed(let msg):
+                return "SwiftData container init failed: \(msg)"
+            case .saveFailed(let msg):
+                return "Context save failed: \(msg)"
+            }
+        }
     }
 
     private func save(_ payload: MemoryPayload) throws {
@@ -522,36 +531,49 @@ final class ShareViewController: UIViewController {
 
         let storeURL = groupURL.appendingPathComponent("recallthat.sqlite")
         let config = ModelConfiguration(url: storeURL)
-        do {
-            let container = try ModelContainer(for: MemoryItem.self, configurations: config)
-            let context = ModelContext(container)
 
-            let searchText = (payload.title + " " + payload.ocrText).lowercased()
-            let item = MemoryItem(
-                id: payload.id,
-                sourceTypeRaw: payload.sourceType.rawValue,
-                photoAssetIdentifier: nil,
-                localThumbnailPath: payload.thumbnailPath,
-                createdAt: Date(),
-                importedAt: Date(),
-                title: payload.title,
-                ocrText: payload.ocrText,
-                ocrStatusRaw: OCRStatus.complete.rawValue,
-                searchText: searchText,
-                originalExists: false,
-                deletedOriginalAt: nil,
-                sourceURL: payload.sourceURL
-            )
-            context.insert(item)
+        let container: ModelContainer
+        do {
+            container = try ModelContainer(for: MemoryItem.self, configurations: config)
+        } catch {
+            throw SaveError.containerInitFailed(error.localizedDescription)
+        }
+
+        let context = ModelContext(container)
+        let searchText = (payload.title + " " + payload.ocrText).lowercased()
+
+        // Deduplicate: skip if this id already exists (re-entrant extension call guard)
+        let id = payload.id
+        let existing = try? context.fetch(FetchDescriptor<MemoryItem>(predicate: #Predicate { $0.id == id }))
+        if existing?.isEmpty == false { return }
+
+        let item = MemoryItem(
+            id: payload.id,
+            sourceTypeRaw: payload.sourceType.rawValue,
+            photoAssetIdentifier: nil,
+            localThumbnailPath: payload.thumbnailPath,
+            createdAt: Date(),
+            importedAt: Date(),
+            title: payload.title,
+            ocrText: payload.ocrText,
+            ocrStatusRaw: OCRStatus.complete.rawValue,
+            searchText: searchText,
+            originalExists: false,
+            deletedOriginalAt: nil,
+            sourceURL: payload.sourceURL,
+            embeddingStatusRaw: EmbeddingStatus.notStarted.rawValue,
+            embeddingData: nil
+        )
+        context.insert(item)
+        do {
             try context.save()
         } catch {
-            throw SaveError.swiftDataError(error.localizedDescription)
+            throw SaveError.saveFailed(error.localizedDescription)
         }
     }
 
     // MARK: - Debug entry
 
-    /// Writes failure info to the shared UserDefaults so the main app can surface it as a list item.
     private func saveDebugEntry(reason: String) {
         let defaults = UserDefaults(suiteName: "group.com.recallthat.app")
         var entries = (defaults?.array(forKey: "shareDebugEntries") as? [[String: String]]) ?? []
@@ -564,7 +586,7 @@ final class ShareViewController: UIViewController {
             "title": lastAttemptedTitle ?? ""
         ]
         entries.insert(entry, at: 0)
-        entries = Array(entries.prefix(20))          // keep last 20 failures
+        entries = Array(entries.prefix(20))
         defaults?.set(entries, forKey: "shareDebugEntries")
     }
 
@@ -581,7 +603,6 @@ final class ShareViewController: UIViewController {
 
     private func fail(reason: String = "Unknown error") {
         saveDebugEntry(reason: reason)
-        // Signal the main app so it picks up the debug entry immediately
         UserDefaults(suiteName: "group.com.recallthat.app")?.set(Date().timeIntervalSince1970, forKey: "lastShareSave")
         shareState.phase = .failed
     }
