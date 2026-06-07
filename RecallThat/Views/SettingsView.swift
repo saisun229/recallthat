@@ -4,6 +4,9 @@ struct SettingsView: View {
     @Environment(AppEnvironment.self) private var appEnv
     @State private var showDeleteAllConfirmation = false
     @State private var showDeletedAllAlert = false
+    @State private var apiKeyInput: String = ""
+    @State private var apiKeySaved = false
+    @State private var showKey = false
 
     var body: some View {
         NavigationStack {
@@ -44,25 +47,74 @@ struct SettingsView: View {
                     }
                 }
 
+                // MARK: - OpenAI API Key
                 Section {
                     HStack {
-                        Label("Semantic Search", systemImage: "sparkles")
+                        Label("Status", systemImage: "sparkles")
                         Spacer()
-                        Text("On")
-                            .foregroundStyle(.green)
-                            .fontWeight(.medium)
+                        if APIConfig.hasOpenAIKey {
+                            Text("Connected")
+                                .foregroundStyle(.green)
+                                .fontWeight(.medium)
+                        } else {
+                            Text("Not configured")
+                                .foregroundStyle(.orange)
+                                .fontWeight(.medium)
+                        }
                     }
+
+                    HStack(spacing: 8) {
+                        Group {
+                            if showKey {
+                                TextField("sk-...", text: $apiKeyInput)
+                            } else {
+                                SecureField("sk-...", text: $apiKeyInput)
+                            }
+                        }
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .font(.system(.body, design: .monospaced))
+
+                        Button {
+                            showKey.toggle()
+                        } label: {
+                            Image(systemName: showKey ? "eye.slash" : "eye")
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+
                     HStack {
-                        Label("AI Answers", systemImage: "brain")
+                        Button("Save Key") {
+                            APIConfig.saveOpenAIKey(apiKeyInput)
+                            apiKeySaved = true
+                            apiKeyInput = ""
+                            // Kick off embedding for any items waiting on a key
+                            appEnv.startEmbeddingIfNeeded()
+                        }
+                        .disabled(apiKeyInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
                         Spacer()
-                        Text("On")
-                            .foregroundStyle(.green)
-                            .fontWeight(.medium)
+
+                        if APIConfig.hasOpenAIKey {
+                            Button("Remove Key", role: .destructive) {
+                                APIConfig.deleteOpenAIKey()
+                                apiKeyInput = ""
+                                apiKeySaved = false
+                            }
+                        }
                     }
+
+                    if apiKeySaved {
+                        Label("Key saved to Keychain.", systemImage: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                            .font(.caption)
+                    }
+
                 } header: {
-                    Text("AI Search")
+                    Text("OpenAI API Key (BYOK)")
                 } footer: {
-                    Text("Semantic search and AI-powered answers are included. Everything runs via on-device keyword search first; AI enhancements apply automatically.")
+                    Text("Paste your OpenAI key to enable semantic search and AI answers. The key is stored on-device in the iOS Keychain and never sent to any server other than api.openai.com.")
                 }
 
                 Section("Data Management") {

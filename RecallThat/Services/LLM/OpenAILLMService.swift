@@ -44,7 +44,7 @@ final class OpenAILLMService: LLMService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = 30
         request.httpBody = try JSONSerialization.data(withJSONObject: [
-            "model": "gpt-4o-mini",
+            "model": "gpt-5-nano",
             "messages": messages,
             "max_tokens": 1000,
             "temperature": 0.2
