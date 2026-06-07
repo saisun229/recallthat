@@ -44,6 +44,18 @@
 		AA000027000000000000001A /* MemoryDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000027000000000000001B /* MemoryDetailViewModel.swift */; };
 		AA000028000000000000001A /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000028000000000000001B /* OnboardingView.swift */; };
 		AA000029000000000000001A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000029000000000000001B /* Assets.xcassets */; };
+		AA00002A000000000000001A /* EmbeddingStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002A000000000000001B /* EmbeddingStatus.swift */; };
+		AA00002B000000000000001A /* APIConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002B000000000000001B /* APIConfig.swift */; };
+		AA00002C000000000000001A /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002C000000000000001B /* KeychainHelper.swift */; };
+		AA00002D000000000000001A /* VectorMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002D000000000000001B /* VectorMath.swift */; };
+		AA00002E000000000000001A /* URLSourceType.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002E000000000000001B /* URLSourceType.swift */; };
+		AA00002F000000000000001A /* EmbeddingServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002F000000000000001B /* EmbeddingServiceProtocol.swift */; };
+		AA000030000000000000001A /* OpenAIEmbeddingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000030000000000000001B /* OpenAIEmbeddingService.swift */; };
+		AA000031000000000000001A /* EmbeddingPipelineService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000031000000000000001B /* EmbeddingPipelineService.swift */; };
+		AA000032000000000000001A /* HybridSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000032000000000000001B /* HybridSearchService.swift */; };
+		AA000033000000000000001A /* LLMServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000033000000000000001B /* LLMServiceProtocol.swift */; };
+		AA000034000000000000001A /* OpenAILLMService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000034000000000000001B /* OpenAILLMService.swift */; };
+		BB00002A000000000000001A /* EmbeddingStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002A000000000000001B /* EmbeddingStatus.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -84,6 +96,17 @@
 		BB000011000000000000001B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BB000012000000000000001B /* RecallThatShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RecallThatShareExtension.entitlements; sourceTree = "<group>"; };
 		BB000013000000000000001B /* RecallThatShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = wrapper.app-extension; includeInIndex = 0; path = RecallThatShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA00002A000000000000001B /* EmbeddingStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbeddingStatus.swift; sourceTree = "<group>"; };
+		AA00002B000000000000001B /* APIConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConfig.swift; sourceTree = "<group>"; };
+		AA00002C000000000000001B /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
+		AA00002D000000000000001B /* VectorMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VectorMath.swift; sourceTree = "<group>"; };
+		AA00002E000000000000001B /* URLSourceType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSourceType.swift; sourceTree = "<group>"; };
+		AA00002F000000000000001B /* EmbeddingServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbeddingServiceProtocol.swift; sourceTree = "<group>"; };
+		AA000030000000000000001B /* OpenAIEmbeddingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIEmbeddingService.swift; sourceTree = "<group>"; };
+		AA000031000000000000001B /* EmbeddingPipelineService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbeddingPipelineService.swift; sourceTree = "<group>"; };
+		AA000032000000000000001B /* HybridSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HybridSearchService.swift; sourceTree = "<group>"; };
+		AA000033000000000000001B /* LLMServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMServiceProtocol.swift; sourceTree = "<group>"; };
+		AA000034000000000000001B /* OpenAILLMService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAILLMService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -169,6 +192,7 @@
 				AA000003000000000000001B /* Memory.swift */,
 				AA000004000000000000001B /* MemorySourceType.swift */,
 				AA000005000000000000001B /* OCRStatus.swift */,
+				AA00002A000000000000001B /* EmbeddingStatus.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -205,8 +229,29 @@
 				AA0000D5B0000000000001B /* OCR */,
 				AA0000D5C0000000000001B /* Search */,
 				AA0000D5D0000000000001B /* Thumbnailing */,
+				AA0000D5E0000000000001B /* Embedding */,
+				AA0000D5F0000000000001B /* LLM */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		AA0000D5E0000000000001B /* Embedding */ = {
+			isa = PBXGroup;
+			children = (
+				AA00002F000000000000001B /* EmbeddingServiceProtocol.swift */,
+				AA000030000000000000001B /* OpenAIEmbeddingService.swift */,
+				AA000031000000000000001B /* EmbeddingPipelineService.swift */,
+			);
+			path = Embedding;
+			sourceTree = "<group>";
+		};
+		AA0000D5F0000000000001B /* LLM */ = {
+			isa = PBXGroup;
+			children = (
+				AA000033000000000000001B /* LLMServiceProtocol.swift */,
+				AA000034000000000000001B /* OpenAILLMService.swift */,
+			);
+			path = LLM;
 			sourceTree = "<group>";
 		};
 		AA0000D5A0000000000001B /* Photos */ = {
@@ -234,6 +279,7 @@
 			children = (
 				AA00000A000000000000001B /* SearchService.swift */,
 				AA000026000000000000001B /* DefaultSearchService.swift */,
+				AA000032000000000000001B /* HybridSearchService.swift */,
 			);
 			path = Search;
 			sourceTree = "<group>";
@@ -259,6 +305,10 @@
 		AA0000D7000000000000001B /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				AA00002B000000000000001B /* APIConfig.swift */,
+				AA00002C000000000000001B /* KeychainHelper.swift */,
+				AA00002D000000000000001B /* VectorMath.swift */,
+				AA00002E000000000000001B /* URLSourceType.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -403,6 +453,7 @@
 				BB000003000000000000001A /* MemoryItem.swift in Sources */,
 				BB000004000000000000001A /* OCRStatus.swift in Sources */,
 				BB000006000000000000001A /* Memory.swift in Sources */,
+				BB00002A000000000000001A /* EmbeddingStatus.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -440,6 +491,17 @@
 				AA000026000000000000001A /* DefaultSearchService.swift in Sources */,
 				AA000027000000000000001A /* MemoryDetailViewModel.swift in Sources */,
 				AA000028000000000000001A /* OnboardingView.swift in Sources */,
+				AA00002A000000000000001A /* EmbeddingStatus.swift in Sources */,
+				AA00002B000000000000001A /* APIConfig.swift in Sources */,
+				AA00002C000000000000001A /* KeychainHelper.swift in Sources */,
+				AA00002D000000000000001A /* VectorMath.swift in Sources */,
+				AA00002E000000000000001A /* URLSourceType.swift in Sources */,
+				AA00002F000000000000001A /* EmbeddingServiceProtocol.swift in Sources */,
+				AA000030000000000000001A /* OpenAIEmbeddingService.swift in Sources */,
+				AA000031000000000000001A /* EmbeddingPipelineService.swift in Sources */,
+				AA000032000000000000001A /* HybridSearchService.swift in Sources */,
+				AA000033000000000000001A /* LLMServiceProtocol.swift in Sources */,
+				AA000034000000000000001A /* OpenAILLMService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
