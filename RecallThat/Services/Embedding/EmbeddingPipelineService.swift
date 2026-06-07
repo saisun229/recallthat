@@ -6,6 +6,7 @@ final class EmbeddingPipelineService {
     private let repository: any MemoryRepository
     private(set) var isRunning = false
     private(set) var lastError: String? = nil
+    private var bgTask = UIBackgroundTaskIdentifier.invalid
 
     init(repository: any MemoryRepository) {
         self.repository = repository
@@ -19,11 +20,15 @@ final class EmbeddingPipelineService {
             return
         }
 
-        var bgTask = UIBackgroundTaskIdentifier.invalid
-        bgTask = UIApplication.shared.beginBackgroundTask(withName: "RecallThat.Embedding") {
-            UIApplication.shared.endBackgroundTask(bgTask)
+        bgTask = UIApplication.shared.beginBackgroundTask(withName: "RecallThat.Embedding") { [weak self] in
+            guard let self else { return }
+            UIApplication.shared.endBackgroundTask(self.bgTask)
+            self.bgTask = .invalid
         }
-        defer { UIApplication.shared.endBackgroundTask(bgTask) }
+        defer {
+            UIApplication.shared.endBackgroundTask(bgTask)
+            bgTask = .invalid
+        }
 
         isRunning = true
         defer { isRunning = false }

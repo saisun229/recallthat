@@ -5,6 +5,7 @@ import UIKit
 final class OCRPipelineService {
     private let ocrService: any OCRServiceProtocol
     private let repository: any MemoryRepository
+    private var bgTask = UIBackgroundTaskIdentifier.invalid
 
     init(ocrService: any OCRServiceProtocol, repository: any MemoryRepository) {
         self.ocrService = ocrService
@@ -18,11 +19,15 @@ final class OCRPipelineService {
         }
         guard !queue.isEmpty else { return }
 
-        var bgTask = UIBackgroundTaskIdentifier.invalid
-        bgTask = UIApplication.shared.beginBackgroundTask(withName: "RecallThat.OCR") {
-            UIApplication.shared.endBackgroundTask(bgTask)
+        bgTask = UIApplication.shared.beginBackgroundTask(withName: "RecallThat.OCR") { [weak self] in
+            guard let self else { return }
+            UIApplication.shared.endBackgroundTask(self.bgTask)
+            self.bgTask = .invalid
         }
-        defer { UIApplication.shared.endBackgroundTask(bgTask) }
+        defer {
+            UIApplication.shared.endBackgroundTask(bgTask)
+            bgTask = .invalid
+        }
 
         onStart?(queue.count)
         for memory in queue {
