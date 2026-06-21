@@ -28,7 +28,7 @@ struct SettingsView: View {
                     }
                     .padding(.vertical, 4)
 
-                    Text("Nothing is uploaded. OCR runs on-device using Apple Vision. RecallThat has no backend server and no account system.")
+                    Text("Your photos never leave your device. OCR runs on-device using Apple Vision. Extracted text may be sent to OpenAI's servers to power semantic search and AI answers. RecallThat has no backend server and no account system.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }

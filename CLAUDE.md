@@ -2,7 +2,7 @@
 
 ## What This Project Is
 
-RecallThat is a local-first iOS app that turns screenshots into private, searchable memory.
+RecallThat is a photo-memory iOS app that turns screenshots into private, searchable memory.
 Users screenshot things they want to remember. The app extracts text via on-device OCR (Apple Vision),
 stores it locally, and lets users search it later. Users can delete original screenshots once the
 text is safely indexed.
@@ -33,30 +33,45 @@ RecallThat/
     LLM/             — OpenAI GPT-4o-mini RAG response
     Thumbnailing/    — thumbnail generation (ThumbnailService)
   Persistence/       — MemoryRepository protocol + SwiftData impl
-  Utilities/         — KeychainHelper, VectorMath, shared helpers
+  Utilities/         — KeychainHelper, VectorMath, APIConfig, shared helpers
 ```
+
+## Privacy Model
+
+Photos never leave the device. Extracted OCR text may be sent to OpenAI's servers to power
+semantic search (text-embedding-3-small) and AI-powered answers (gpt-4o-mini). The developer
+supplies the OpenAI API key at build time via Xcode Cloud environment variable — users do not
+provide a key and are not billed directly.
+
+Key facts for App Store review:
+- Screenshots and thumbnails: always on-device only
+- OCR text: sent to OpenAI when AI features are available (embedding + chat)
+- No backend server owned by the developer
+- No user accounts, no sync, no analytics on content
 
 ## Key Constraints (non-negotiable)
 
-- No cloud upload of screenshots or OCR text
-- No backend, no accounts, no sync
+- Screenshots and photos are never uploaded to any server
+- OCR text is sent to OpenAI only (for embedding/RAG) — no other third parties
 - No auto-deletion — user must explicitly confirm every delete
 - OCR must run on-device using Apple Vision only
 - Photos access must handle denied/limited states gracefully
 - UI must never block during OCR or indexing
-- OpenAI calls only when user provides their own API key (BYOK) — stored in Keychain, never leaves device
-- Graceful fallback to keyword-only search if API key is missing or OpenAI call fails
+- Graceful fallback to keyword-only search if OpenAI call fails
+- Pre-permission UI buttons must use neutral labels ("Continue", "Next") per App Store guidelines
 
 ## Business Model
 
-**Free**: keyword search, local OCR, unlimited memories, share extension
-**Pro (BYOK)**: dense embeddings (semantic search), AI-powered search responses, reranker
-User provides their own OpenAI API key in Settings → stored in iOS Keychain → never sent to our servers.
-Estimated cost: < $0.03/month per active user.
+**Hosted AI (developer-controlled key):** Developer pays OpenAI for all users.
+- OpenAI `text-embedding-3-small` for semantic indexing
+- OpenAI `gpt-4o-mini` for AI answers
+- API key is NOT in source code — stored as Xcode Cloud secret env var (`OPENAI_API_KEY`)
+- `APIConfig.openAIKey` reads from `Info.plist["OpenAIAPIKey"]` injected at build time
+- Estimated cost: ~$0.015/month per active user
 
 ## Current Phase
 
-Post-MVP AI & UX expansion (completed phases 1–8 of the v2 roadmap)
+Post-MVP AI & UX expansion (completed phases 1–10 of the v2 roadmap + App Store resubmission fixes)
 
 ## Technology Choices
 
@@ -64,22 +79,22 @@ Post-MVP AI & UX expansion (completed phases 1–8 of the v2 roadmap)
 - SwiftData for persistence (iOS 17+)
 - Apple Vision for OCR (VNRecognizeTextRequest)
 - PhotoKit for Photos access (PHPhotoLibrary)
-- OpenAI `text-embedding-3-small` for dense embeddings (BYOK)
-- OpenAI `gpt-4o-mini` for RAG responses (BYOK)
+- OpenAI `text-embedding-3-small` for dense embeddings (developer-hosted key)
+- OpenAI `gpt-4o-mini` for RAG responses (developer-hosted key)
 - Accelerate/vDSP for cosine similarity (on-device)
 - Reciprocal Rank Fusion for hybrid search merging
-- iOS Keychain for API key storage
+- iOS Keychain for internal storage (not used for API key)
 - async/await throughout
 - No third-party dependencies
 
 ## Do Not Add (until explicitly requested)
 
-- Backend server or cloud sync
-- User accounts or StoreKit subscriptions (use BYOK instead)
+- Backend server owned by the developer
+- User accounts or StoreKit subscriptions
 - Analytics on screenshot content
 - Auto-delete behavior
 - Background app refresh / push notifications
-- OpenAI calls without user-supplied API key
+- Additional third-party AI providers beyond OpenAI
 
 ## Git Workflow
 

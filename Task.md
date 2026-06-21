@@ -1,79 +1,51 @@
-# RecallThat — Task.md (v2 Roadmap)
+# RecallThat — App Store Rejection Fix (Build 9)
 
-## Status
+## Rejection Reason (Build 8, June 10 2026)
 
-Post-MVP AI & UX expansion. Core app is TestFlight-ready.
-
----
-
-## Completed Phases (v2 Expansion)
-
-### Phase 1 — UI Polish + Share Extension Bug Fix ✅
-- Logo/title left-aligned in nav bar (was centered)
-- Removed "Reindex All" from the ellipsis menu
-- OCR disclosure group closed by default in MemoryDetailView
-- Share extension → main app visibility fixed via `NSPersistentStoreRemoteChangeNotification` + UserDefaults signal
-
-### Phase 2 — Temporal Grouping in Memories Tab ✅
-- Grouped list: Last 7 Days → Previous 2 Weeks → by Year
-- `HomeViewModel.groupedMemories` computed property
-- Sectioned `List` with headers in HomeView
-
-### Phase 3 — Data Model Upgrade ✅
-- Added `EmbeddingStatus` enum (notStarted / pending / complete / failed)
-- Added `embedding: [Float]?` and `embeddingStatus` to `Memory` struct
-- Added `embeddingStatusRaw: String` and `embeddingData: Data?` to `MemoryItem` SwiftData model
-- SwiftData auto-migrates (new fields have defaults)
-
-### Phase 4 — OpenAI Embedding Service + API Key Settings ✅
-- `KeychainHelper` stores API key securely (iOS Keychain)
-- `OpenAIEmbeddingService` calls `text-embedding-3-small`
-- `EmbeddingPipelineService` background-indexes memories after OCR
-- SettingsView "AI Search" section: enter/remove key, trigger indexing
-- Graceful no-op when key is missing or API fails
-
-### Phase 5 — Hybrid Search + Reranker ✅
-- `VectorMath.cosineSimilarity` using Accelerate/vDSP
-- `HybridSearchService` replaces `DefaultSearchService`:
-  - Keyword search (instant, offline)
-  - Query embedding → cosine similarity on stored vectors (when key is set + embeddings exist)
-  - Reciprocal Rank Fusion merge + deduplication
-  - Falls back to keyword-only silently if API fails
-- `SearchServiceProtocol.search()` is now `async`
-- `SearchViewModel` uses Task-based cancellable async search
-
-### Phase 6 — RAG Search Response (LLM + Sources) ✅
-- `OpenAILLMService` calls `gpt-4o-mini` with top-5 memory excerpts as context
-- Question detection in `SearchViewModel` (question words + `?` suffix)
-- SearchView shows "AI Answer" card above results when question detected + key set
-- Sources list shown below the AI answer
-- Silent fallback: if API fails → show results list only
-
-### Phase 7 — Share Extension Expanded Format Support ✅
-- Added `MemorySourceType.sharedFile` for generic documents
-- `ShareViewController` now handles: Word (.docx/.doc), Excel (.xlsx/.xls), Keynote/PowerPoint, plus any generic data file (catch-all)
-- Best-effort text extraction; falls back to filename + label
-- `MemoryCardView` shows orange file badge for `.sharedFile` items
+**Guideline 5.1.1(iv) — Pre-permission button label**  
+App Review saw a "Allow Access" button on the custom screen shown before the Photos permission
+dialog. Apple requires neutral labels like "Continue" or "Next" on pre-permission buttons.
 
 ---
 
-## Next Steps (suggested priorities)
+## Fix Phases
 
-1. **Xcode project file update** — new Swift files must be added to `RecallThat.xcodeproj/project.pbxproj` manually in Xcode before building. New files:
-   - `RecallThat/Models/EmbeddingStatus.swift`
-   - `RecallThat/Utilities/KeychainHelper.swift`
-   - `RecallThat/Utilities/VectorMath.swift`
-   - `RecallThat/Services/Embedding/EmbeddingServiceProtocol.swift`
-   - `RecallThat/Services/Embedding/OpenAIEmbeddingService.swift`
-   - `RecallThat/Services/Embedding/EmbeddingPipelineService.swift`
-   - `RecallThat/Services/Search/HybridSearchService.swift`
-   - `RecallThat/Services/LLM/LLMServiceProtocol.swift`
-   - `RecallThat/Services/LLM/OpenAILLMService.swift`
+### Phase 1 — Button label fix ✅ (already done in working tree)
+File: `RecallThat/Views/PhotoPermissionView.swift`  
+Change: `Button("Allow Access")` → `Button("Continue")` for the `.notDetermined` state.
 
-2. **Build + test** in Xcode on real device — verify OCR, sharing, search, AI features
+**Verify:** Open the app fresh (no Photos permission granted). The screen before the iOS
+permission dialog must show a "Continue" button, not "Allow Access".
 
-3. **Subscription / monetisation** — if hosting API key is preferred over BYOK, add StoreKit 2 subscription and a simple backend proxy
+---
 
-4. **Streaming LLM responses** — replace non-streaming GPT call with server-sent events for snappier AI answer display
+### Phase 2 — Privacy copy accuracy ✅ (already done in working tree)
+Three files updated to reflect that extracted text goes to OpenAI (not "stays on device"):
 
-5. **App Store re-submission** — update privacy policy to mention optional OpenAI key usage
+- `RecallThat/Views/OnboardingView.swift` — page 2 body updated
+- `RecallThat/Views/PhotoPermissionView.swift` — description updated
+- `RecallThat/Views/SettingsView.swift` — Privacy section footnote updated
+
+**Verify:** Read each of those three descriptions and confirm they mention OpenAI for semantic
+search / AI answers, without claiming everything stays on-device.
+
+---
+
+### Phase 3 — Commit + increment build number
+- [ ] Commit the three changed files with message: `fix: use neutral "Continue" button for Photos pre-permission screen (App Store 5.1.1iv)`
+- [ ] In Xcode → project settings → bump CFBundleVersion from 8 → 9
+- [ ] Archive and upload via Xcode Organizer
+
+---
+
+### Phase 4 — Resubmission checklist
+- [ ] In App Store Connect, select build 9 for the existing 1.0 version
+- [ ] Reply to the App Review thread confirming the button label is now "Continue"
+- [ ] Submit for review
+
+---
+
+## Nothing Else to Change
+
+The rest of the app is unaffected. No new features, no model changes, no UI rework needed for
+this resubmission.

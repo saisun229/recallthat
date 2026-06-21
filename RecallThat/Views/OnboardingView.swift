@@ -15,8 +15,8 @@ struct OnboardingView: View {
         OnboardingPage(
             systemImage: "lock.shield.fill",
             color: .green,
-            title: "Everything Stays On-Device",
-            body: "Text is extracted using Apple's on-device OCR. Your screenshots and their contents are never uploaded or shared."
+            title: "Your Photos Stay Private",
+            body: "Text is extracted using Apple's on-device OCR. Your photos never leave your device. Extracted text may be sent to OpenAI for semantic search and AI-powered answers."
         ),
         OnboardingPage(
             systemImage: "photo.badge.minus",

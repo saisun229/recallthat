@@ -18,7 +18,7 @@ struct PhotoPermissionView: View {
                 }
                 .buttonStyle(.borderedProminent)
             } else if status == .notDetermined {
-                Button("Allow Access") {
+                Button("Continue") {
                     onRequestAccess()
                 }
                 .buttonStyle(.borderedProminent)
@@ -41,7 +41,7 @@ struct PhotoPermissionView: View {
         case .limited:
             return "You've granted limited access. Go to Settings → Privacy → Photos to allow full access to all screenshots."
         default:
-            return "RecallThat needs access to your Photos library to find and index your screenshots. Everything stays on your device — nothing is uploaded."
+            return "RecallThat needs access to your Photos library to find and index your screenshots. Your photos never leave your device."
         }
     }
 }
