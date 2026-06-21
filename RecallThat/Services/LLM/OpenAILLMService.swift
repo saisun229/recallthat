@@ -46,8 +46,7 @@ final class OpenAILLMService: LLMService {
         request.httpBody = try JSONSerialization.data(withJSONObject: [
             "model": "gpt-5-nano",
             "messages": messages,
-            "max_completion_tokens": 1000,
-            "temperature": 0.2
+            "max_completion_tokens": 1000
         ])
 
         let data: Data

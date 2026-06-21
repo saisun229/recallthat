@@ -27,6 +27,7 @@ final class OpenAIEmbeddingService: EmbeddingService {
 
         if let http = response as? HTTPURLResponse, http.statusCode != 200 {
             if http.statusCode == 429 { throw EmbeddingError.rateLimited }
+            if http.statusCode == 401 { throw EmbeddingError.apiKeyMissing }
             let errMsg: String
             if let errObj = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["error"] as? [String: Any],
                let msg = errObj["message"] as? String {
