@@ -10,10 +10,25 @@
     <key>NSPrivacyTrackingDomains</key>
     <array/>
 
-    <!-- Data types collected. RecallThat stores everything on-device only.
-         No data is linked to identity or used for tracking. -->
+    <!-- Text extracted from screenshots may be sent to OpenAI to power
+         semantic search and AI-generated answers. Not linked to identity,
+         not used for tracking. Screenshots/photos/thumbnails themselves
+         are never collected — they stay on-device. -->
     <key>NSPrivacyCollectedDataTypes</key>
-    <array/>
+    <array>
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeOtherUserContent</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+    </array>
 
     <!-- Required Reason APIs used by this app. -->
     <key>NSPrivacyAccessedAPITypes</key>

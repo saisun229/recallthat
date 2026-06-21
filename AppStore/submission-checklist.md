@@ -91,7 +91,7 @@ Two files already exist in the repo — they just need to be added to the correc
    - Support URL: `https://github.com/saisun229/recallthat/issues`
 4. **App Information → Category**: Productivity / Utilities.
 5. **App Privacy (Data Collection)**: answer the questionnaire:
-   - "Do you collect data from this app?" → **No** (all local-only).
+   - "Do you collect data from this app?" → **Yes**. Declare **User Content** (text extracted from screenshots): not linked to identity, not used for tracking, purpose **App Functionality**, shared with a third party (OpenAI) for semantic search and AI-generated answers. Screenshots/photos themselves and thumbnails are not collected — they stay on-device.
 6. **Age Rating**: complete the questionnaire → should result in **4+**.
 
 ---
@@ -158,7 +158,7 @@ See `AppStore/metadata.md` → "Screenshots Required" section for which screens 
 - [ ] App created in App Store Connect
 - [ ] Metadata filled (name, subtitle, description, keywords)
 - [ ] Privacy Policy URL set in App Store Connect
-- [ ] App Privacy questionnaire complete (no data collected)
+- [ ] App Privacy questionnaire complete (User Content shared with OpenAI declared)
 - [ ] Age rating questionnaire complete (4+)
 - [ ] Screenshots uploaded (6.9" required)
 - [ ] Archive uploaded from Xcode Organizer

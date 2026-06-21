@@ -17,21 +17,21 @@ Find what you screenshot. Instantly.
 
 You screenshot things to remember them — a recipe, a price, a phone number, an address. Then you can never find it again. RecallThat fixes that.
 
-Every time you import a screenshot, RecallThat reads the text inside it using Apple's on-device Vision. Search for any word from that text later and find it in seconds.
+Every time you import a screenshot, RecallThat reads the text inside it using Apple's on-device Vision. Search for any word — or ask a question in plain English — and find it in seconds.
 
 **How it works**
 1. Tap the import button and select screenshots from your Photos library.
-2. RecallThat extracts all the text on-device — nothing is uploaded.
-3. Search any word. Find the memory instantly.
+2. RecallThat extracts all the text on-device using Apple Vision.
+3. Search any word, or ask a question to get an AI-generated answer with sources.
 4. Once indexed, delete the original from Photos to free up space. The text and title stay in RecallThat forever.
 
 **Share Extension**
 Save content from other apps directly to RecallThat. Share images, links, PDFs, text, and videos from Safari, Notes, Files — anywhere.
 
-**Completely private**
-- All OCR runs on your device using Apple Vision.
-- No account required. No cloud. No server.
-- Your screenshots and their contents are never uploaded or shared.
+**Private by design**
+- All OCR runs on your device using Apple Vision — your screenshots and thumbnails never leave your device.
+- No account required. No developer-owned backend or sync.
+- Extracted text may be sent to OpenAI to power semantic search and AI-generated answers (optional, falls back to offline keyword search if unavailable).
 - Delete everything at any time from Settings.
 
 **Clean and fast**
@@ -49,7 +49,7 @@ screenshot,search,OCR,memory,text,recall,notes,photo,scan,finder,index,vision,ca
 ---
 
 ## Promotional Text  [169/170]
-Turn your screenshots into a searchable index. On-device OCR. No cloud. No account. Just find what you forgot.
+Turn your screenshots into a searchable index. On-device OCR, AI-powered answers. No account. Just find what you forgot.
 
 ---
 
@@ -96,7 +96,7 @@ The Share Extension can be tested by:
 2. Select "RecallThat" from the share sheet.
 3. The extension will process and save the content, then dismiss automatically.
 
-No account or login is required. No internet connection is needed for the core OCR flow.
+No account or login is required. No internet connection is needed for the core OCR/import/keyword-search flow. An internet connection is used (via a developer-supplied OpenAI API key) only for the optional semantic search and AI-answer features; these fail gracefully to offline keyword search if unavailable.
 
 ---
 
@@ -124,7 +124,7 @@ Recommended: also add **iPhone 5.5"** (iPhone 8 Plus Simulator) for older device
    - Shows: "Find What You Forgot" splash with the animated gradient.
 
 5. **Onboarding — privacy page**
-   - Swipe to page 2 "Everything Stays On-Device".
+   - Swipe to page 2 "Your Photos Stay Private".
    - Reinforces the privacy angle in the listing.
 
 ### Screenshot sizes to export from Simulator:

@@ -68,25 +68,30 @@
   <div class="container">
     <header>
       <h1>RecallThat — Privacy Policy</h1>
-      <p>Effective date: June 5, 2026 &nbsp;·&nbsp; Last updated: June 5, 2026</p>
+      <p>Effective date: June 5, 2026 &nbsp;·&nbsp; Last updated: June 21, 2026</p>
     </header>
 
     <div class="callout">
-      <strong>Short version:</strong> RecallThat stores everything on your device. Nothing you index — no screenshots, no extracted text, no thumbnails — is ever uploaded to any server or shared with any third party.
+      <strong>Short version:</strong> Your screenshots and thumbnails never leave your device. The text extracted from your screenshots may be sent to OpenAI's servers to power semantic search and AI-generated answers. RecallThat has no account system, no developer-owned backend, and no analytics.
     </div>
 
     <h2>1. What RecallThat Does</h2>
     <p>RecallThat is a personal memory tool. You grant access to your Photos library, and the app reads screenshot images to extract their text using Apple's on-device Vision framework. The extracted text, a title, and a small thumbnail are stored locally in an encrypted SwiftData database on your device.</p>
 
-    <h2>2. Data We Collect</h2>
-    <p>RecallThat collects <strong>no data</strong> from you. All processing and storage is local to your device:</p>
+    <h2>2. Data We Collect and Share</h2>
+    <p>RecallThat's screenshots, thumbnails, and on-device storage never leave your device. However, the <strong>extracted text</strong> from your screenshots is sent to OpenAI to enable two optional AI features:</p>
     <ul>
-      <li><strong>OCR text</strong> — extracted from your screenshots using Apple Vision, stored locally only.</li>
+      <li><strong>Semantic search</strong> — your extracted text is sent to OpenAI's <code>text-embedding-3-small</code> model to generate a numeric representation used for meaning-based search.</li>
+      <li><strong>AI-powered answers</strong> — when you ask a question, your extracted text and your question are sent to OpenAI's <code>gpt-4o-mini</code> model to generate a natural-language answer with citations.</li>
+    </ul>
+    <p>These requests are made using a developer-supplied API key — you do not need your own OpenAI account and are not billed by OpenAI directly. OpenAI processes this data under its own API data usage policy, which does not use API data to train its models. RecallThat does not send your name, email, device identifiers, or photos themselves to OpenAI — only the text extracted from screenshots you choose to index.</p>
+    <p>If the OpenAI calls fail or are unavailable, the app falls back to offline keyword search, which never leaves your device.</p>
+    <p>The following data stays local to your device and is never uploaded by RecallThat:</p>
+    <ul>
+      <li><strong>Screenshots and thumbnails</strong> — always processed and stored on-device only.</li>
       <li><strong>Titles and timestamps</strong> — derived from screenshot content or metadata, stored locally only.</li>
-      <li><strong>Thumbnails</strong> — small image previews generated on-device, stored locally only.</li>
       <li><strong>Onboarding flag</strong> — a single boolean in device storage to track whether you have completed onboarding.</li>
     </ul>
-    <p>None of this data ever leaves your device.</p>
 
     <h2>3. Photos Library Access</h2>
     <p>RecallThat requests access to your Photos library solely to read screenshots you choose to index. It does not upload, sync, or share any photos or their contents. You may grant "Selected Photos" access and choose exactly which images the app can see.</p>
@@ -99,8 +104,8 @@
     <h2>5. No Analytics, No Crash Reporting</h2>
     <p>RecallThat contains no analytics SDKs, no crash-reporting tools, and no advertising libraries. Your usage patterns are not observed.</p>
 
-    <h2>6. No Accounts or Cloud Sync</h2>
-    <p>RecallThat has no account system and no cloud backend. There is nothing to sign up for. Your data exists only on your device and is removed when you delete the app or use the "Delete All Memories" function inside the app.</p>
+    <h2>6. No Accounts or Developer-Owned Backend</h2>
+    <p>RecallThat has no account system and no backend server operated by the developer. There is nothing to sign up for. Your data exists only on your device — except for the extracted text sent to OpenAI as described in Section 2 — and is removed when you delete the app or use the "Delete All Memories" function inside the app.</p>
 
     <h2>7. Data Security</h2>
     <p>All data is stored in the default iOS app container, which is protected by iOS file encryption when your device is locked. RecallThat does not implement any custom encryption beyond what iOS provides by default.</p>
