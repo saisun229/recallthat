@@ -25,7 +25,7 @@ final class OpenAILLMService: LLMService {
                 - Answer using ONLY the provided memory snippets — never invent or assume facts not present
                 - Be detailed and specific: include names, numbers, prices, dates, places, and key facts from the memories
                 - Cite each source inline with [1], [2], etc. at the end of the sentence that uses it
-                - After your answer, add a "Sources:" section listing each cited memory as: [N] Title — Date
+                - Do NOT add a "Sources:" list at the end — the app renders the cited memories as tappable cards itself
                 - If the memories only partially answer the question, explain what you found and what might be missing
                 - Write in clear paragraphs; use a short bullet list only if multiple distinct items are being compared
                 - Do not say "I" — address the user directly

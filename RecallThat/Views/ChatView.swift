@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct ChatView: View {
     @Environment(AppEnvironment.self) private var appEnv
@@ -144,19 +145,97 @@ struct ChatBubble: View {
     let message: ChatMessage
 
     var body: some View {
-        HStack(alignment: .bottom) {
-            if message.isUser { Spacer(minLength: 48) }
-            Text(message.content)
-                .font(.callout)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
-                .background(message.isUser ? Color.blue : Color(.systemGray5))
-                .foregroundStyle(message.isUser ? .white : .primary)
-                .clipShape(RoundedRectangle(cornerRadius: 18))
-                .textSelection(.enabled)
-            if !message.isUser { Spacer(minLength: 48) }
+        VStack(alignment: message.isUser ? .trailing : .leading, spacing: 8) {
+            HStack(alignment: .bottom) {
+                if message.isUser { Spacer(minLength: 48) }
+                Text(message.content)
+                    .font(.callout)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(message.isUser ? Color.blue : Color(.systemGray5))
+                    .foregroundStyle(message.isUser ? .white : .primary)
+                    .clipShape(RoundedRectangle(cornerRadius: 18))
+                    .textSelection(.enabled)
+                if !message.isUser { Spacer(minLength: 48) }
+            }
+
+            if !message.sources.isEmpty {
+                sourcesRow
+            }
         }
         .frame(maxWidth: .infinity, alignment: message.isUser ? .trailing : .leading)
+    }
+
+    private var sourcesRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 10) {
+                ForEach(Array(message.sources.enumerated()), id: \.element.id) { index, memory in
+                    NavigationLink(destination: MemoryDetailView(memory: memory)) {
+                        ChatSourceCard(index: index + 1, memory: memory)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.trailing, 48)
+        }
+    }
+}
+
+// MARK: - Source card
+
+/// Tappable thumbnail card shown under an assistant message, mirroring the homepage's
+/// memory thumbnail so a citation like [1] can be opened straight into MemoryDetailView.
+struct ChatSourceCard: View {
+    let index: Int
+    let memory: Memory
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ZStack(alignment: .topLeading) {
+                thumbnailView
+                Text("\(index)")
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.white)
+                    .padding(4)
+                    .background(Color.black.opacity(0.55), in: Circle())
+                    .padding(4)
+            }
+
+            Text(displayTitle)
+                .font(.caption2)
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .frame(width: 76, alignment: .leading)
+        }
+    }
+
+    @ViewBuilder
+    private var thumbnailView: some View {
+        if let identifier = memory.photoAssetIdentifier {
+            AssetThumbnailView(identifier: identifier, size: 76)
+        } else if let path = memory.localThumbnailPath,
+                  let uiImage = UIImage(contentsOfFile: path) {
+            Image(uiImage: uiImage)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: 76, height: 76)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+        } else {
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.secondary.opacity(0.1))
+                .frame(width: 76, height: 76)
+                .overlay(
+                    Image(systemName: "photo")
+                        .foregroundStyle(.tertiary)
+                )
+        }
+    }
+
+    private var displayTitle: String {
+        memory.title.isEmpty
+            ? memory.createdAt.formatted(date: .abbreviated, time: .omitted)
+            : memory.title
     }
 }
 

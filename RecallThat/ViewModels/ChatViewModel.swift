@@ -32,20 +32,20 @@ final class ChatViewModel {
         let relevant = await searchService.search(query: text, in: allMemories)
 
         let response: String
+        let sources: [Memory]
         if relevant.isEmpty {
             response = "No matches found in your \(allMemories.count) saved memories for that query. Try different keywords, or add an OpenAI key in Settings to enable semantic search."
+            sources = []
         } else if APIConfig.hasOpenAIKey {
             response = await queryOpenAI(query: text, relevant: relevant)
+            sources = Array(relevant.prefix(10))
         } else {
-            // No API key — show titles + first line of OCR text so the results are still useful
-            let items = relevant.prefix(10).enumerated().map { i, m -> String in
-                let preview = m.ocrText.isEmpty ? "" : "\n  " + String(m.ocrText.prefix(120)).replacingOccurrences(of: "\n", with: " ")
-                return "[\(i + 1)] \(m.title)\(preview)"
-            }.joined(separator: "\n")
-            response = "Found \(relevant.count) related \(relevant.count == 1 ? "memory" : "memories"):\n\n\(items)\n\nAdd an OpenAI API key in Settings for AI-generated answers with full citations."
+            // No API key — the tappable source cards below show titles/thumbnails, so just summarize the count
+            response = "Found \(relevant.count) related \(relevant.count == 1 ? "memory" : "memories"). Add an OpenAI API key in Settings for AI-generated answers with full citations."
+            sources = Array(relevant.prefix(10))
         }
 
-        messages.append(ChatMessage(isUser: false, content: response))
+        messages.append(ChatMessage(isUser: false, content: response, sources: sources))
         ChatQueryCounter.recordQuery()
         isResponding = false
     }
