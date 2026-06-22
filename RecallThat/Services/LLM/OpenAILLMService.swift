@@ -46,7 +46,8 @@ final class OpenAILLMService: LLMService {
         request.httpBody = try JSONSerialization.data(withJSONObject: [
             "model": "gpt-5-nano",
             "messages": messages,
-            "max_completion_tokens": 1000
+            "max_completion_tokens": 2000,
+            "reasoning_effort": "low"
         ])
 
         let data: Data
@@ -77,7 +78,13 @@ final class OpenAILLMService: LLMService {
             throw EmbeddingError.apiError("Unexpected response format")
         }
 
-        return content.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            let finishReason = (choices.first?["finish_reason"] as? String) ?? "unknown"
+            throw EmbeddingError.apiError("Model returned an empty response (finish_reason: \(finishReason)). Try a shorter question.")
+        }
+
+        return trimmed
     }
 
     private static let dateFormatter: DateFormatter = {
