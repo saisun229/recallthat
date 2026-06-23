@@ -21,6 +21,16 @@ struct ChatView: View {
             .navigationTitle("Ask")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        isInputFocused = false
+                        viewModel.startNewConversation()
+                        addWelcomeMessageIfNeeded()
+                    } label: {
+                        Image(systemName: "square.and.pencil")
+                    }
+                    .disabled(viewModel.isResponding)
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Text("\(ChatQueryCounter.queriesRemaining)/\(ChatQueryCounter.limitPerDay) today")
                         .font(.caption)
@@ -29,13 +39,16 @@ struct ChatView: View {
             }
         }
         .onAppear {
-            if viewModel.messages.isEmpty {
-                viewModel.messages.append(ChatMessage(
-                    isUser: false,
-                    content: "Ask me anything about your saved memories. I'll search through them and give you a direct answer."
-                ))
-            }
+            addWelcomeMessageIfNeeded()
         }
+    }
+
+    private func addWelcomeMessageIfNeeded() {
+        guard viewModel.messages.isEmpty else { return }
+        viewModel.messages.append(ChatMessage(
+            isUser: false,
+            content: "Ask me anything about your saved memories. I'll search through them and give you a direct answer."
+        ))
     }
 
     // MARK: - Error banner

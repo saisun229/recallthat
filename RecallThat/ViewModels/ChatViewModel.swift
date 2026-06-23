@@ -14,6 +14,13 @@ final class ChatViewModel {
 
     func dismissOpenAIError() { openAIError = nil }
 
+    func startNewConversation() {
+        messages = []
+        inputText = ""
+        limitError = nil
+        openAIError = nil
+    }
+
     func send(using searchService: any SearchServiceProtocol, repository: any MemoryRepository) async {
         let text = inputText.trimmingCharacters(in: .whitespaces)
         guard !text.isEmpty, !isResponding else { return }
