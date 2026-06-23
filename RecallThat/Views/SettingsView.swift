@@ -4,6 +4,7 @@ struct SettingsView: View {
     @Environment(AppEnvironment.self) private var appEnv
     @State private var showDeleteAllConfirmation = false
     @State private var showDeletedAllAlert = false
+    @State private var aiSharingConsent = APIConfig.hasUserConsent
 
     var body: some View {
         NavigationStack {
@@ -28,7 +29,7 @@ struct SettingsView: View {
                     }
                     .padding(.vertical, 4)
 
-                    Text("Your photos never leave your device. OCR runs on-device using Apple Vision. Extracted text may be sent to OpenAI's servers to power semantic search and AI answers. RecallThat has no backend server and no account system.")
+                    Text("Your photos never leave your device. OCR runs on-device using Apple Vision. If you turn on AI Sharing below, the extracted text (never the photo itself) is sent to OpenAI's servers to power semantic search and AI answers. RecallThat has no backend server and no account system.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -45,24 +46,32 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    Toggle("Share Text with OpenAI", isOn: $aiSharingConsent)
+                        .disabled(!APIConfig.hasOpenAIKey)
+                        .onChange(of: aiSharingConsent) { _, newValue in
+                            APIConfig.setUserConsent(newValue)
+                        }
+
                     HStack {
                         Label("Semantic Search", systemImage: "sparkles")
                         Spacer()
-                        Text(APIConfig.hasOpenAIKey ? "On" : "Unavailable")
-                            .foregroundStyle(APIConfig.hasOpenAIKey ? .green : .secondary)
+                        Text(APIConfig.aiFeaturesEnabled ? "On" : "Off")
+                            .foregroundStyle(APIConfig.aiFeaturesEnabled ? .green : .secondary)
                             .fontWeight(.medium)
                     }
                     HStack {
                         Label("AI Answers", systemImage: "brain")
                         Spacer()
-                        Text(APIConfig.hasOpenAIKey ? "On" : "Unavailable")
-                            .foregroundStyle(APIConfig.hasOpenAIKey ? .green : .secondary)
+                        Text(APIConfig.aiFeaturesEnabled ? "On" : "Off")
+                            .foregroundStyle(APIConfig.aiFeaturesEnabled ? .green : .secondary)
                             .fontWeight(.medium)
                     }
                 } header: {
                     Text("AI Search")
                 } footer: {
-                    Text("Semantic search and AI-powered answers use the configured OpenAI API key. Keyword search is always available as a fallback.")
+                    Text(APIConfig.hasOpenAIKey
+                        ? "When on, your extracted screenshot text is sent to OpenAI to power semantic search and AI-generated answers. Your photos are never sent. Keyword search is always available as a fallback, regardless of this setting."
+                        : "AI features require an OpenAI key to be configured for this app. Keyword search is always available.")
                 }
 
                 Section("Data Management") {

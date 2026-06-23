@@ -41,14 +41,14 @@ final class ChatViewModel {
         let response: String
         let sources: [Memory]
         if relevant.isEmpty {
-            response = "No matches found in your \(allMemories.count) saved memories for that query. Try different keywords, or add an OpenAI key in Settings to enable semantic search."
+            response = "No matches found in your \(allMemories.count) saved memories for that query. Try different keywords, or turn on AI sharing in Settings to enable semantic search."
             sources = []
-        } else if APIConfig.hasOpenAIKey {
+        } else if APIConfig.aiFeaturesEnabled {
             response = await queryOpenAI(query: text, relevant: relevant)
             sources = Array(relevant.prefix(10))
         } else {
-            // No API key — the tappable source cards below show titles/thumbnails, so just summarize the count
-            response = "Found \(relevant.count) related \(relevant.count == 1 ? "memory" : "memories"). Add an OpenAI API key in Settings for AI-generated answers with full citations."
+            // AI sharing off (no key, or no consent) — the tappable source cards below show titles/thumbnails
+            response = "Found \(relevant.count) related \(relevant.count == 1 ? "memory" : "memories"). Turn on AI sharing in Settings for AI-generated answers with full citations."
             sources = Array(relevant.prefix(10))
         }
 

@@ -140,7 +140,8 @@ See `AppStore/metadata.md` → "Screenshots Required" section for which screens 
    - Sign-in required: **No**.
 4. Pricing: Free.
 5. Release: **Manually release this version** (safer for first release — lets you release at a time of your choosing after approval).
-6. Click **Submit for Review**.
+6. **Availability**: under **App Availability**, deselect **China mainland** (required — the app uses OpenAI/ChatGPT-adjacent functionality that isn't licensed for distribution there; see App Review Notes).
+7. Click **Submit for Review**.
 
 **Average review time for new apps: 1–3 days.**
 
@@ -164,4 +165,5 @@ See `AppStore/metadata.md` → "Screenshots Required" section for which screens 
 - [ ] Archive uploaded from Xcode Organizer
 - [ ] Build selected in App Store Connect
 - [ ] App Review notes filled
+- [ ] China mainland deselected in Availability settings
 - [ ] Submitted for review

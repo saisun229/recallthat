@@ -14,11 +14,13 @@ final class EmbeddingPipelineService {
 
     func processQueue() async {
         guard !isRunning else { return }
-        let apiKey = APIConfig.openAIKey
-        guard !apiKey.isEmpty else {
-            lastError = "OpenAI API key not configured."
+        guard APIConfig.aiFeaturesEnabled else {
+            lastError = APIConfig.hasOpenAIKey
+                ? "AI features are off. Enable sharing with OpenAI in Settings to use semantic search."
+                : "OpenAI API key not configured."
             return
         }
+        let apiKey = APIConfig.openAIKey
 
         bgTask = UIApplication.shared.beginBackgroundTask(withName: "RecallThat.Embedding") { [weak self] in
             guard let self else { return }

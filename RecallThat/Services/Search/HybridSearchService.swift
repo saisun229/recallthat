@@ -9,11 +9,11 @@ final class HybridSearchService: SearchServiceProtocol {
 
         let keywordResults = keywordSearch(query: trimmed, in: memories)
 
-        let apiKey = APIConfig.openAIKey
-        guard !apiKey.isEmpty else {
-            // No API key — return keyword results only, capped at 20
+        guard APIConfig.aiFeaturesEnabled else {
+            // No API key, or user hasn't consented to sharing OCR text with OpenAI — keyword results only
             return Array(keywordResults.prefix(20))
         }
+        let apiKey = APIConfig.openAIKey
 
         guard let queryVector = try? await OpenAIEmbeddingService(apiKey: apiKey).embed(text: trimmed) else {
             return Array(keywordResults.prefix(20))

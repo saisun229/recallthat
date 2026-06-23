@@ -98,6 +98,10 @@ The Share Extension can be tested by:
 
 No account or login is required. No internet connection is needed for the core OCR/import/keyword-search flow. An internet connection is used (via a developer-supplied OpenAI API key) only for the optional semantic search and AI-answer features; these fail gracefully to offline keyword search if unavailable.
 
+Re: Guideline 5.1.1(i)/5.1.2(i) (data sharing disclosure) — Resolved. Onboarding page 2 now requires an explicit choice ("Allow Sharing with OpenAI" or "Keep On-Device Only") before any extracted text is sent to OpenAI. The choice is also changeable anytime via a toggle in Settings → AI Search. No screenshot, photo, or thumbnail is ever sent — only OCR text, and only after this explicit opt-in.
+
+Re: Guideline 5 (China DST/ChatGPT licensing) — Resolved. The China mainland storefront has been deselected in Availability settings; this app is not being distributed in China and the OpenAI-powered functionality remains active everywhere else.
+
 ---
 
 ## Screenshots Required

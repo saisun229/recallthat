@@ -5,6 +5,8 @@ struct OnboardingView: View {
 
     @State private var currentPage = 0
 
+    private let consentPageIndex = 1
+
     private let pages: [OnboardingPage] = [
         OnboardingPage(
             systemImage: "text.magnifyingglass",
@@ -16,7 +18,7 @@ struct OnboardingView: View {
             systemImage: "lock.shield.fill",
             color: .green,
             title: "Your Photos Stay Private",
-            body: "Text is extracted using Apple's on-device OCR. Your photos never leave your device. Extracted text may be sent to OpenAI for semantic search and AI-powered answers."
+            body: "Text is extracted using Apple's on-device OCR. Your photos never leave your device.\n\nTo power semantic search and AI-powered answers, the extracted text (not your photos) can be sent to OpenAI, RecallThat's AI provider. This is optional — you choose below, and you can change it anytime in Settings."
         ),
         OnboardingPage(
             systemImage: "photo.badge.minus",
@@ -47,10 +49,16 @@ struct OnboardingView: View {
                 .tabViewStyle(.page(indexDisplayMode: .always))
                 .indexViewStyle(.page(backgroundDisplayMode: .always))
 
-                actionButton
-                    .padding(.horizontal, 28)
-                    .padding(.bottom, 52)
-                    .padding(.top, 12)
+                Group {
+                    if currentPage == consentPageIndex {
+                        consentButtons
+                    } else {
+                        actionButton
+                    }
+                }
+                .padding(.horizontal, 28)
+                .padding(.bottom, 52)
+                .padding(.top, 12)
             }
         }
     }
@@ -109,6 +117,34 @@ struct OnboardingView: View {
         }
         .buttonStyle(.borderedProminent)
         .tint(pages[currentPage].color)
+        .animation(.easeInOut(duration: 0.25), value: currentPage)
+    }
+
+    private var consentButtons: some View {
+        VStack(spacing: 10) {
+            Button {
+                APIConfig.setUserConsent(true)
+                withAnimation(.easeInOut(duration: 0.3)) { currentPage += 1 }
+            } label: {
+                Text("Allow Sharing with OpenAI")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(pages[currentPage].color)
+
+            Button {
+                APIConfig.setUserConsent(false)
+                withAnimation(.easeInOut(duration: 0.3)) { currentPage += 1 }
+            } label: {
+                Text("Keep On-Device Only")
+                    .font(.subheadline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+            }
+            .buttonStyle(.borderless)
+        }
         .animation(.easeInOut(duration: 0.25), value: currentPage)
     }
 }
